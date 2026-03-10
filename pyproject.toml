@@ -14,9 +14,11 @@ dependencies = [
     "python-telegram-bot[job-queue]~=22.5",
     "python-dotenv~=1.2",
     "pytest",
+    "pytest-asyncio",
     "flake8",
     "injector~=0.24",
     "requests",
+    "langchain-google-genai",
 ]
 
 [tool.setuptools.packages.find]
