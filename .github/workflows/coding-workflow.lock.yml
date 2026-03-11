@@ -22,7 +22,7 @@
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"a682fab55d6a83d80e13c282461c985def08d5edcd9e0e84e390a3bf23057da7","compiler_version":"v0.57.2","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"2d2c61806513f7cd76583f0c34839555f64b24ecc138a14a538300a89b5d5f74","compiler_version":"v0.57.2","strict":true}
 
 name: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
 "on":
