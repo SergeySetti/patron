@@ -1,5 +1,6 @@
 name: Issue Clarifier
 
+
 on:
     issues:
         types: [ opened ]
@@ -7,7 +8,10 @@ on:
 permissions: read-all
 
 jobs:
+
     clarify-issue:
+
+
         runs-on: ubuntu-latest
         permissions:
             issues: write
@@ -23,6 +27,7 @@ jobs:
                         
                         Summarize what the issue is asking for in your own words, identify any
                         ambiguities or missing details, and suggest clarifying questions if needed.
-                    comment: true
+                    gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+                    use_vertex_ai: False
                 env:
                     GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
