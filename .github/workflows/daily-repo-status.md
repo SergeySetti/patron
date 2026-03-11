@@ -1,35 +1,36 @@
 ---
 description: |
-  This workflow creates daily repo status reports. It gathers recent repository
-  activity (issues, PRs, discussions, releases, code changes) and generates
-  engaging GitHub issues with productivity insights, community highlights,
-  and project recommendations.
+    This workflow creates daily repo status reports. It gathers recent repository
+    activity (issues, PRs, discussions, releases, code changes) and generates
+    engaging GitHub issues with productivity insights, community highlights,
+    and project recommendations.
 
 on:
     schedule: daily
-  workflow_dispatch:
+
+    workflow_dispatch:
 
 permissions:
-  contents: read
-  issues: read
-  pull-requests: read
+    contents: read
+    issues: read
+    pull-requests: read
 
 network: defaults
 
 tools:
-  github:
-    # If in a public repo, setting `lockdown: false` allows
-    # reading issues, pull requests and comments from 3rd-parties
-    # If in a private repo this has no particular effect.
-    lockdown: false
+    github:
+        # If in a public repo, setting `lockdown: false` allows
+        # reading issues, pull requests and comments from 3rd-parties
+        # If in a private repo this has no particular effect.
+        lockdown: false
 
 safe-outputs:
-  mentions: false
-  allowed-github-references: []
-  create-issue:
-    title-prefix: "[repo-status] "
-    labels: [report, daily-status]
-    close-older-issues: true
+    mentions: false
+    allowed-github-references: [ ]
+    create-issue:
+        title-prefix: "[repo-status] "
+        labels: [ report, daily-status ]
+        close-older-issues: true
 source: githubnext/agentics/workflows/daily-repo-status.md@346204513ecfa08b81566450d7d599556807389f
 engine: gemini
 ---
