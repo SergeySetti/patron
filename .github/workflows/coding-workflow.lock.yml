@@ -24,7 +24,7 @@
 #
 # gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"2d2c61806513f7cd76583f0c34839555f64b24ecc138a14a538300a89b5d5f74","compiler_version":"v0.57.2","strict":true}
 
-name: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+name: "Edit session on issue opened or edited"
 "on":
   issues:
     types:
@@ -36,7 +36,7 @@ permissions: {}
 concurrency:
   group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number || github.run_id }}"
 
-run-name: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+run-name: "Edit session on issue opened or edited"
 
 jobs:
   activation:
@@ -67,7 +67,7 @@ jobs:
           GH_AW_INFO_VERSION: ""
           GH_AW_INFO_AGENT_VERSION: ""
           GH_AW_INFO_CLI_VERSION: "v0.57.2"
-          GH_AW_INFO_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          GH_AW_INFO_WORKFLOW_NAME: "Edit session on issue opened or edited"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -1009,7 +1009,7 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
-          WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          WORKFLOW_NAME: "Edit session on issue opened or edited"
           WORKFLOW_DESCRIPTION: "No description provided"
           HAS_PATCH: ${{ steps.collect_output.outputs.has_patch }}
         with:
@@ -1139,7 +1139,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          GH_AW_WORKFLOW_NAME: "Edit session on issue opened or edited"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1152,7 +1152,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          GH_AW_WORKFLOW_NAME: "Edit session on issue opened or edited"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1165,7 +1165,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          GH_AW_WORKFLOW_NAME: "Edit session on issue opened or edited"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "coding-workflow"
@@ -1188,7 +1188,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          GH_AW_WORKFLOW_NAME: "Edit session on issue opened or edited"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_MESSAGE: ${{ steps.noop.outputs.noop_message }}
@@ -1205,7 +1205,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+          GH_AW_WORKFLOW_NAME: "Edit session on issue opened or edited"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
@@ -1254,7 +1254,7 @@ jobs:
       GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/coding-workflow"
       GH_AW_ENGINE_ID: "gemini"
       GH_AW_WORKFLOW_ID: "coding-workflow"
-      GH_AW_WORKFLOW_NAME: "Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments"
+      GH_AW_WORKFLOW_NAME: "Edit session on issue opened or edited"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}

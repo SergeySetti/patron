@@ -19,7 +19,7 @@ safe-outputs:
         target: "*" 
 ---
 
-# Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments
+# Edit session on issue opened or edited
 
 **Load when**: User has created an issue indicating a direct code edit is needed, or has commented
 on an issue indicating a direct code edit is needed
