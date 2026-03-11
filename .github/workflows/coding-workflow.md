@@ -1,5 +1,7 @@
 ---
-on: issues
+on:
+    issues:
+        types: [ opened, edited ]
 engine: gemini
 
 safe-outputs:
@@ -11,13 +13,16 @@ safe-outputs:
         labels: [ automation ]
     push-to-pull-request-branch:
         target: "*"
-        title-prefix: "[bot] "     
+        title-prefix: "[agentic-session] "
+    add-comment:
+        max: 3
+        target: "*" 
 ---
 
 # Edit code directly based on issues with prefix `gh-aw:` in the issue title or comments
 
-**Load when**: User has created an issue with `gh-aw:` prefix indicating a direct code edit is needed, or has commented
-on an issue with `gh-aw:` indicating a direct code edit is needed
+**Load when**: User has created an issue indicating a direct code edit is needed, or has commented
+on an issue indicating a direct code edit is needed
 **Prompt file**: `ROOT/.github/aw/edit-code-agentic-workflow.md`
 
 ## Commit and Push Changes
