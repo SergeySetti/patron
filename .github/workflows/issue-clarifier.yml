@@ -16,7 +16,7 @@ jobs:
                 uses: actions/checkout@v4
 
             -   name: Analyze and comment on issue
-                uses: google-gemini/gemini-github-models@v0
+                uses: 'google-github-actions/run-gemini-cli@main'
                 with:
                     prompt: |
                         Analyze the current issue and comment on how you understand it.
