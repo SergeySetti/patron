@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   issues: read
-  pull-requests: write
+  pull-requests: read
 
 network: defaults
 
