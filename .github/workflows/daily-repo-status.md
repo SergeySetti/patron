@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   issues: read
-  pull-requests: read
+  pull-requests: write
 
 network: defaults
 
@@ -31,7 +31,7 @@ safe-outputs:
     labels: [report, daily-status]
     close-older-issues: true
 source: githubnext/agentics/workflows/daily-repo-status.md@346204513ecfa08b81566450d7d599556807389f
-engine: copilot
+engine: gemini
 ---
 
 # Daily Repo Status
