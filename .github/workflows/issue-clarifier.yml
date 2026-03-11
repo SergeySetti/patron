@@ -1,0 +1,28 @@
+name: Issue Clarifier
+
+on:
+    issues:
+        types: [ opened ]
+
+permissions: read-all
+
+jobs:
+    clarify-issue:
+        runs-on: ubuntu-latest
+        permissions:
+            issues: write
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+
+            -   name: Analyze and comment on issue
+                uses: google-gemini/gemini-github-models@v0
+                with:
+                    prompt: |
+                        Analyze the current issue and comment on how you understand it.
+                        
+                        Summarize what the issue is asking for in your own words, identify any
+                        ambiguities or missing details, and suggest clarifying questions if needed.
+                    comment: true
+                env:
+                    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -1,6 +1,6 @@
 import pytest
 
-from agents.patron_itself.patron_agent import agent
+from src.agents.patron_itself.patron_agent import agent
 
 
 @pytest.mark.asyncio
