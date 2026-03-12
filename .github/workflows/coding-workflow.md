@@ -26,6 +26,16 @@ safe-outputs:
 on an issue indicating a direct code edit is needed
 **Prompt file**: `ROOT/.github/aw/edit-code-agentic-workflow.md`
 
+## Run Tests
+
+Before committing, run the project's test suite to verify nothing is broken:
+
+```bash
+pip install -e . && python -m pytest src/tests/ -v
+```
+
+If any tests fail, fix the issues before proceeding. Do not commit code that fails tests.
+
 ## Commit and Push Changes
 
 Commit the changes to the new branch with a descriptive commit message. The branch name should follow the format
