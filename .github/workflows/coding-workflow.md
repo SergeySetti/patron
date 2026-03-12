@@ -11,6 +11,7 @@ safe-outputs:
     create-pull-request:
         title-prefix: "[ai] "
         labels: [ automation ]
+        protected-files: fallback-to-issue
     push-to-pull-request-branch:
         target: "*"
         title-prefix: "[agentic-session] "
