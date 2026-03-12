@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "github": {
+      "headers": {
+        "Authorization": "cgaOl8m8gwyQHY08vuISrbqGEGpepDax2gfoTi5RUwNBBDYOTkM3Y5AnZJbd"
+      },
+      "url": "http://host.docker.internal:80/mcp/github"
+    },
+    "safeoutputs": {
+      "headers": {
+        "Authorization": "cgaOl8m8gwyQHY08vuISrbqGEGpepDax2gfoTi5RUwNBBDYOTkM3Y5AnZJbd"
+      },
+      "url": "http://host.docker.internal:80/mcp/safeoutputs"
+    }
+  },
+  "context": {
+    "includeDirectories": [
+      "/tmp/"
+    ]
+  },
+  "tools": {
+    "core": [
+      "glob",
+      "grep_search",
+      "list_directory",
+      "read_file",
+      "read_many_files",
+      "replace",
+      "run_shell_command",
+      "write_file"
+    ]
+  }
+}
