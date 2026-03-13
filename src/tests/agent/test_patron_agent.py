@@ -1,36 +1,38 @@
-from pprint import pprint
+from unittest import skip
+from unittest.mock import patch, MagicMock
 
 import pytest
-from unittest.mock import AsyncMock, patch
-from src.agents.patron_itself.patron_agent import agent
+from langgraph.checkpoint.memory import InMemorySaver
+
+from src.agents.patron_itself.patron_agent import run_agent
+
 
 @pytest.mark.asyncio
-async def test_agent():
-    user_ask = "What is the weather in London?"
-
-    # We mock the agent to avoid real API calls during tests if needed, 
-    # but here we want to see if the structure works.
-    # Since we can't run it without API key, let's mock the ainvoke.
-    with patch.object(agent, 'ainvoke', new_callable=AsyncMock) as mock_ainvoke:
-        mock_ainvoke.return_value = {"output": "It's always sunny in London!"}
-        
-        response = await agent.ainvoke({"input": user_ask})
-
-        assert "output" in response
-        assert response["output"] == "It's always sunny in London!"
-        mock_ainvoke.assert_called_once_with({"input": user_ask})
-
-@pytest.mark.asyncio
+@skip("This test is meant for manual inspection and requires real API calls. Uncomment to run.")
 async def test_real_agent_response():
     user_ask = "What is the weather in New York?"
-    real_agent = agent  # Use the real agent without mocking
-    # This test will actually call the agent, so it requires a valid API key and network access.
-    response = await agent.ainvoke({
-        "messages": [{"role": "user", "content": user_ask}],
-        "user_preferences": {"style": "technical", "verbosity": "detailed"},
-    })
+
+    # response = await run_agent(user_ask, 'user1', 'session1')
+    response = await run_agent(user_ask)
 
     messages = response['messages']
     print(
         messages[-1].content[-1]["text"]
     )  # Print the last message content for inspection
+
+
+@pytest.mark.asyncio
+@patch("src.agents.patron_itself.patron_agent.MongoDBSaver")
+async def test_agent_with_checkpointer(mock_mongo_saver):
+    in_memory_checkpointer = InMemorySaver()
+    mock_mongo_saver.from_conn_string.return_value.__enter__ = MagicMock(return_value=in_memory_checkpointer)
+    mock_mongo_saver.from_conn_string.return_value.__exit__ = MagicMock(return_value=False)
+
+    user_ask = "What is the weather in New York?"
+
+    response = await run_agent(user_ask, 'user1', 'session1')
+
+    messages = response['messages']
+    print(messages[-1].content[-1]["text"])
+
+    mock_mongo_saver.from_conn_string.assert_called_once()
