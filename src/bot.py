@@ -11,7 +11,7 @@ from telegram.ext import (
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    test = 'Wellcome'
+    test = 'Welcome'
     await context.bot.send_message(chat_id=user_id, text=test)
 
 
@@ -19,7 +19,7 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await context.bot.send_message(
         chat_id=update.message.chat_id,
         reply_to_message_id=update.message.message_id,
-        text='responce result',
+        text='response result',
     )
 
 
