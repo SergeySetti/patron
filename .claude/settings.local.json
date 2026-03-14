@@ -11,7 +11,12 @@
       "Bash(python -m pytest src/tests/ -v)",
       "Bash(find /c/Farm/patron/src/agents/patron_itself/repositories -type f -name *.py)",
       "Bash(docker run:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(find /c/Farm/patron/src -type f -name __init__.py ! -path */venv/* -exec cat {} +)",
+      "Bash(find /c/Farm/patron -not -path */venv/* -not -path */.git/* -not -path *.egg-info* -not -path */.pytest_cache/* -type d)",
+      "Bash(wc -l /c/Farm/patron/src/*/__init__.py /c/Farm/patron/src/*/*/__init__.py)",
+      "Bash(python -m pytest src/tests/repositories/ -v -s)",
+      "Bash(git add:*)"
     ]
   }
 }

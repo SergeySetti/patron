@@ -3,6 +3,8 @@ services:
     build: .
     env_file:
       - .env
+    environment:
+      - QDRANT_URL=http://qdrant:6333
     depends_on:
       - qdrant
     restart: unless-stopped
