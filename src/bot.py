@@ -8,8 +8,10 @@ from telegram.ext import (
     MessageHandler,
 )
 
+from dependencies import app_container, AssistantLogger
 from src.agents.patron_itself.patron_agent import run_agent
 
+logger = app_container.get(AssistantLogger)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -22,8 +24,12 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_id = str(update.effective_user.id)
     chat_id = str(update.message.chat_id)
 
+    logger.info(f"User message: {user_message}")
+
     response = await run_agent(user_message, user_id, chat_id)
     agent_reply = response['messages'][-1].content[-1]["text"]
+
+    logger.info(f"Agent reply: {agent_reply}")
 
     await context.bot.send_message(
         chat_id=update.message.chat_id,
@@ -33,7 +39,8 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 
 def main() -> None:
-    print("Starting Telegram bot...")
+
+    logger.info("Starting Telegram bot...")
     application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
     application.add_handler(CommandHandler("start", start))
@@ -42,6 +49,7 @@ def main() -> None:
         MessageHandler(telegram.ext.filters.TEXT, bot_participation)
     )
 
+    logger.info("Bot is polling for updates...")
     application.run_polling()
 
 
