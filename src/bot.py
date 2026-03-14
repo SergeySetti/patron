@@ -8,6 +8,8 @@ from telegram.ext import (
     MessageHandler,
 )
 
+from src.agents.patron_itself.patron_agent import run_agent
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -16,10 +18,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_message = update.message.text
+    user_id = str(update.effective_user.id)
+    chat_id = str(update.message.chat_id)
+
+    response = await run_agent(user_message, user_id, chat_id)
+    agent_reply = response['messages'][-1].content[-1]["text"]
+
     await context.bot.send_message(
         chat_id=update.message.chat_id,
         reply_to_message_id=update.message.message_id,
-        text='responce result',
+        text=agent_reply,
     )
 
 
