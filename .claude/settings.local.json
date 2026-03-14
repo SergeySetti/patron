@@ -4,7 +4,11 @@
       "mcp__desktop-commander__read_file",
       "WebFetch(domain:github.github.com)",
       "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(data[0][''''text'''']\\)\")",
-      "mcp__desktop-commander__start_process"
+      "mcp__desktop-commander__start_process",
+      "Bash(gh issue:*)",
+      "Bash(git checkout:*)",
+      "Bash(source C:/Farm/patron/venv/Scripts/activate)",
+      "Bash(python -m pytest src/tests/ -v)"
     ]
   }
 }
