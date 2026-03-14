@@ -8,7 +8,10 @@
       "Bash(gh issue:*)",
       "Bash(git checkout:*)",
       "Bash(source C:/Farm/patron/venv/Scripts/activate)",
-      "Bash(python -m pytest src/tests/ -v)"
+      "Bash(python -m pytest src/tests/ -v)",
+      "Bash(find /c/Farm/patron/src/agents/patron_itself/repositories -type f -name *.py)",
+      "Bash(docker run:*)",
+      "Bash(docker compose:*)"
     ]
   }
 }
