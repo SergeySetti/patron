@@ -1,54 +1,22 @@
-import os
 import uuid
+from datetime import datetime, timezone, timedelta
 
 import pytest
-from unittest.mock import MagicMock
 from qdrant_client import QdrantClient
 
 from agents.patron_itself.repositories.memories_repository import MemoriesRepository, COLLECTION_NAME
 
-USE_REAL_QDRANT = os.getenv("USE_REAL_QDRANT", "").lower() in ("1", "true", "yes")
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 TEST_USER_ID = "test_user_42"
 
 
-def _make_fake_vector(seed: float = 0.1) -> list[float]:
-    """Create a deterministic 768-dim vector for testing without hitting Gemini API."""
-    import math
-    return [math.sin(seed * (i + 1)) for i in range(768)]
-
-
 @pytest.fixture()
-def qdrant():
-    """Use in-memory Qdrant by default; set USE_REAL_QDRANT=1 for a real instance."""
-    if USE_REAL_QDRANT:
-        client = QdrantClient(url=QDRANT_URL)
-    else:
-        client = QdrantClient(location=":memory:")
-    yield client
+def repo(test_container):
+    repo = test_container.get(MemoriesRepository)
+    yield repo
     try:
-        client.delete_collection(COLLECTION_NAME)
+        test_container.get(QdrantClient).delete_collection(COLLECTION_NAME)
     except Exception:
         pass
-
-
-@pytest.fixture()
-def vectorizer_mock():
-    """Mock the VectorizerGemini so tests don't need a Google API key."""
-    mock = MagicMock()
-    call_counter = {"n": 0}
-
-    def side_effect(text, task_type=None):
-        call_counter["n"] += 1
-        return _make_fake_vector(seed=call_counter["n"] * 0.1 + hash(text) % 100)
-
-    mock.vectorize_one.side_effect = side_effect
-    return mock
-
-
-@pytest.fixture()
-def repo(qdrant, vectorizer_mock):
-    return MemoriesRepository(qdrant_client=qdrant, vectorizer=vectorizer_mock)
 
 
 class TestMemoriesRepository:
@@ -115,3 +83,70 @@ class TestMemoriesRepository:
         result = repo.get_by_id(str(uuid.uuid4()))
 
         assert result is None
+
+    def test_save_stores_created_at(self, repo):
+        point_id = repo.save(TEST_USER_ID, "Timestamped memory")
+
+        result = repo.get_by_id(point_id)
+
+        assert result["created_at"] is not None
+        parsed = datetime.fromisoformat(result["created_at"])
+        assert parsed.tzinfo is not None
+
+    def test_save_with_explicit_created_at(self, repo):
+        ts = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        point_id = repo.save(TEST_USER_ID, "Memory with explicit date", created_at=ts)
+
+        result = repo.get_by_id(point_id)
+
+        assert result["created_at"] == ts.isoformat()
+
+    def test_find_by_date_range(self, repo):
+        base = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        repo.save(TEST_USER_ID, "January memory", created_at=base)
+        repo.save(TEST_USER_ID, "February memory", created_at=base + timedelta(days=31))
+        repo.save(TEST_USER_ID, "March memory", created_at=base + timedelta(days=60))
+
+        results = repo.find_by_date_range(
+            TEST_USER_ID,
+            date_from=base,
+            date_to=base + timedelta(days=35),
+        )
+
+        texts = [r["text"] for r in results]
+        assert "January memory" in texts
+        assert "February memory" in texts
+        assert "March memory" not in texts
+
+    def test_find_by_date_range_open_ended_from(self, repo):
+        base = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        repo.save(TEST_USER_ID, "Old memory", created_at=base)
+        repo.save(TEST_USER_ID, "New memory", created_at=base + timedelta(days=60))
+
+        results = repo.find_by_date_range(TEST_USER_ID, date_from=base + timedelta(days=30))
+
+        texts = [r["text"] for r in results]
+        assert "New memory" in texts
+        assert "Old memory" not in texts
+
+    def test_find_by_date_range_open_ended_to(self, repo):
+        base = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        repo.save(TEST_USER_ID, "Old memory", created_at=base)
+        repo.save(TEST_USER_ID, "New memory", created_at=base + timedelta(days=60))
+
+        results = repo.find_by_date_range(TEST_USER_ID, date_to=base + timedelta(days=30))
+
+        texts = [r["text"] for r in results]
+        assert "Old memory" in texts
+        assert "New memory" not in texts
+
+    def test_find_by_date_range_filters_by_user(self, repo):
+        ts = datetime(2025, 3, 1, tzinfo=timezone.utc)
+        repo.save("user_A", "A's memory", created_at=ts)
+        repo.save("user_B", "B's memory", created_at=ts)
+
+        results = repo.find_by_date_range("user_A", date_from=ts, date_to=ts)
+
+        texts = [r["text"] for r in results]
+        assert "A's memory" in texts
+        assert "B's memory" not in texts

@@ -16,7 +16,8 @@
       "Bash(find /c/Farm/patron -not -path */venv/* -not -path */.git/* -not -path *.egg-info* -not -path */.pytest_cache/* -type d)",
       "Bash(wc -l /c/Farm/patron/src/*/__init__.py /c/Farm/patron/src/*/*/__init__.py)",
       "Bash(python -m pytest src/tests/repositories/ -v -s)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(python -m pytest src/tests/repositories/test_memories_repository.py -v)"
     ]
   }
 }
