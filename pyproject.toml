@@ -20,6 +20,7 @@ dependencies = [
     "flake8",
     "injector~=0.24",
     "requests",
+    "qdrant-client~=1.17.1",
 ]
 
 [tool.setuptools.packages.find]
