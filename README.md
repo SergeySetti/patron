@@ -60,7 +60,7 @@ For educational purposes, this project is built using the **LangChain** agentic 
 
 To start the bot, run:
 ```bash
-python -m src.agents.patron_itself.patron_agent
+python -m bot
 ```
 
 ## Development
@@ -68,7 +68,7 @@ python -m src.agents.patron_itself.patron_agent
 ### Running Tests
 
 ```bash
-pytest
+python -m pytest src/tests/ -v 2>&1
 ```
 
 ### Linting
