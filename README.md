@@ -1,82 +1,73 @@
-# Patron - Telegram Agentic AI Assistant
+# 🤖 Patron — Telegram Agentic AI Assistant
 
-Patron is an intelligent Telegram bot designed as a personal planning and remembering assistant. It helps users manage their schedules, reminders, tasks, goals, and plans, ensuring that nothing important is forgotten.
+Patron is a Telegram bot that acts as a personal planning and remembering assistant. Built with LangChain and Google Gemini.
 
-## Purpose
+---
 
-The primary goal of Patron is to act as a reliable companion for managing personal organization. It can:
-- Remember information for later recall.
-- Schedule reminders and recurrent events.
-- Track tasks, goals, and long-term plans.
+## 🛠️ Tech Stack
 
-For educational purposes, this project is built using the **LangChain** agentic framework, though it also explores integrations with Google's AI ecosystem.
+| Technology | Role |
+|---|---|
+| 🐍 **Python** >= 3.12 | Language |
+| 🦜 **LangChain** | Agentic framework |
+| ✨ **Google Gemini 3.1 Pro** | LLM |
+| 💬 **python-telegram-bot** | Telegram integration |
+| 🍃 **MongoDB** | Conversation state persistence |
+| 🔍 **Qdrant** | Vector database |
+| 🐳 **Docker Compose** | Containerized deployment |
 
-## Features
+---
 
-- **Advanced AI Reasoning:** Powered by `gemini-3.1-pro-preview` via Google Generative AI.
-- **Agentic Capabilities:** Built using LangChain's agent system, allowing the bot to use tools and make decisions autonomously.
-- **Personal Organization:** Dedicated focus on reminders, tasks, and goal management.
-- **Telegram Integration:** Easy-to-use interface via the Telegram messaging app.
-- **Scalable Architecture:** Uses Dependency Injection with the `injector` library for a clean and maintainable codebase.
-- **Persistence:** Integrated with MongoDB for storing user data, reminders, and session information.
+## 🚀 Getting Started
 
-## Tech Stack
+### 📋 Prerequisites
 
-- **Language:** Python >= 3.12
-- **Frameworks:** [LangChain](https://www.langchain.com/), [python-telegram-bot](https://python-telegram-bot.org/)
-- **AI Model:** Google Gemini 3.1 Pro
-- **Database:** MongoDB (via `pymongo`)
-- **Testing:** `pytest`
+- 🐳 Docker & Docker Compose **or** 🐍 Python 3.12+
+- 🔑 Telegram Bot Token (from [@BotFather](https://t.me/BotFather))
+- 🔑 Google AI API Key
+- 🍃 MongoDB instance
 
-## Getting Started
+### 🔐 Environment Variables
 
-### Prerequisites
+Create a `.env` file in the project root:
 
-- Python 3.12 or higher
-- A Telegram Bot Token (obtained from [@BotFather](https://t.me/BotFather))
-- A Google AI API Key (for Gemini)
-- A MongoDB instance
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/SergeySetti/patron.git
-   cd patron
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install .
-   ```
-
-3. Configure environment variables:
-   Create a `.env` file in the root directory and add your credentials:
-   - `TELEGRAM_TOKEN`
-   - `GOOGLE_API_KEY`
-   - `MONGO_URI`
-
-### Running the Bot
-
-To start the bot, run:
-```bash
-python -m bot
+```env
+TELEGRAM_BOT_TOKEN=<your-telegram-bot-token>
+GOOGLE_API_KEY=<your-google-api-key>
+GOOGLE_GENAI_USE_VERTEXAI=False
+MONGODB_URI=<your-mongodb-connection-string>
+ASSISTANT_SESSIONS_DATABASE_URL=<your-postgresql-connection-string>
 ```
 
-## Development
-
-### Running Tests
+### 🐳 Run with Docker Compose
 
 ```bash
-python -m pytest src/tests/ -v 2>&1
+docker compose up
 ```
 
-### Linting
+This starts the bot and a Qdrant instance (accessible at `http://localhost:6333`).
+
+### 💻 Run Locally
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install .
+python src/bot.py
+```
+
+---
+
+## 🧪 Development
+
+### ✅ Tests
+
+```bash
+python -m pytest src/tests/ -v
+```
+
+### 🔎 Linting
 
 ```bash
 flake8 src
 ```
-
-## License
-
-This project is licensed under the terms specified in the repository.
