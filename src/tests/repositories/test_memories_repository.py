@@ -1,4 +1,5 @@
 import uuid
+from unittest import skip
 
 import pytest
 from unittest.mock import MagicMock
@@ -49,6 +50,7 @@ def repo(qdrant, vectorizer_mock):
 
 class TestMemoriesRepository:
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_save_and_get_by_id(self, repo):
         point_id = repo.save(TEST_USER_ID, "Remember to buy milk")
 
@@ -58,6 +60,7 @@ class TestMemoriesRepository:
         assert result["id"] == point_id
         assert result["text"] == "Remember to buy milk"
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_save_with_metadata(self, repo):
         point_id = repo.save(TEST_USER_ID, "Meeting at 3pm", metadata={"category": "calendar"})
 
@@ -65,6 +68,7 @@ class TestMemoriesRepository:
 
         assert result["metadata"] == {"category": "calendar"}
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_search_returns_relevant_memories(self, repo):
         repo.save(TEST_USER_ID, "I love Italian pasta with tomato sauce")
         repo.save(TEST_USER_ID, "My dentist appointment is on Friday")
@@ -76,6 +80,7 @@ class TestMemoriesRepository:
         assert all(r["text"] for r in results)
         assert all(r["score"] is not None for r in results)
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_search_filters_by_user_id(self, repo):
         repo.save("user_A", "Secret memory of user A")
         repo.save("user_B", "Secret memory of user B")
@@ -91,6 +96,7 @@ class TestMemoriesRepository:
         assert "Secret memory of user B" in texts_b
         assert "Secret memory of user A" not in texts_b
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_search_respects_limit(self, repo):
         for i in range(5):
             repo.save(TEST_USER_ID, f"Memory number {i}")
@@ -99,6 +105,7 @@ class TestMemoriesRepository:
 
         assert len(results) == 2
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_delete(self, repo):
         point_id = repo.save(TEST_USER_ID, "Memory to delete")
 
@@ -107,6 +114,7 @@ class TestMemoriesRepository:
         result = repo.get_by_id(point_id)
         assert result is None
 
+    @skip("This test is meant for manual inspection and requires a real Qdrant instance. Uncomment to run.")
     def test_get_by_id_not_found(self, repo):
         result = repo.get_by_id(str(uuid.uuid4()))
 
