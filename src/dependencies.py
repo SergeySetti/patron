@@ -7,6 +7,8 @@ from typing import NewType
 from dotenv import load_dotenv
 from injector import Injector, Module, provider, singleton
 
+from services.vectorisation.VectorizerGemini import VectorizerGemini
+
 load_dotenv()
 
 AssistantLogger = NewType("AssistantLogger", logging.Logger)
@@ -14,8 +16,8 @@ AssistantLogger = NewType("AssistantLogger", logging.Logger)
 
 class PatronModule(Module):
 
-    # def configure(self, binder) -> None:
-    #     # binder.bind(CompiledStateGraph, to=agent)  # Yeah, that simple
+    def configure(self, binder) -> None:
+        binder.bind(VectorizerGemini, to=VectorizerGemini(output_dimensionality=768, model="gemini-embedding-001"), scope=singleton)
 
     # ------------------------------------------------------------------
     # Loggers
