@@ -1,8 +1,9 @@
 import uuid
+from datetime import datetime, timezone
 
 from injector import inject
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, DatetimeRange
 
 from services.vectorisation.VectorizerGemini import VectorizerGemini
 from services.vectorisation.vectorizer_gemini.task_types import RETRIEVAL_DOCUMENT, RETRIEVAL_QUERY
@@ -27,11 +28,13 @@ class MemoriesRepository:
                 vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
             )
 
-    def save(self, user_id: str, text: str, metadata: dict = None) -> str:
+    def save(self, user_id: str, text: str, metadata: dict = None, created_at: datetime | None = None) -> str:
         """Save a memory and return its id."""
         vector = self.vectorizer.vectorize_one(text, task_type=RETRIEVAL_DOCUMENT)
         point_id = str(uuid.uuid4())
-        payload = {"user_id": user_id, "text": text}
+        if created_at is None:
+            created_at = datetime.now(timezone.utc)
+        payload = {"user_id": user_id, "text": text, "created_at": created_at.isoformat()}
         if metadata:
             payload["metadata"] = metadata
 
@@ -54,7 +57,7 @@ class MemoriesRepository:
 
         return [
             {"id": point.id, "text": point.payload["text"], "score": point.score,
-             "metadata": point.payload.get("metadata")}
+             "metadata": point.payload.get("metadata"), "created_at": point.payload.get("created_at")}
             for point in results.points
         ]
 
@@ -64,7 +67,35 @@ class MemoriesRepository:
         if not results:
             return None
         point = results[0]
-        return {"id": point.id, "text": point.payload["text"], "metadata": point.payload.get("metadata")}
+        return {"id": point.id, "text": point.payload["text"], "metadata": point.payload.get("metadata"),
+                "created_at": point.payload.get("created_at")}
+
+    def find_by_date_range(
+        self, user_id: str, date_from: datetime | None = None, date_to: datetime | None = None
+    ) -> list[dict]:
+        """Find memories for a user within a date range (inclusive)."""
+        must = [FieldCondition(key="user_id", match=MatchValue(value=user_id))]
+
+        range_kwargs = {}
+        if date_from is not None:
+            range_kwargs["gte"] = date_from
+        if date_to is not None:
+            range_kwargs["lte"] = date_to
+
+        if range_kwargs:
+            must.append(FieldCondition(key="created_at", range=DatetimeRange(**range_kwargs)))
+
+        results, _offset = self.qdrant_client.scroll(
+            collection_name=COLLECTION_NAME,
+            scroll_filter=Filter(must=must),
+            limit=100,
+        )
+
+        return [
+            {"id": point.id, "text": point.payload["text"], "metadata": point.payload.get("metadata"),
+             "created_at": point.payload.get("created_at")}
+            for point in results
+        ]
 
     def delete(self, point_id: str):
         """Delete a memory by its id."""

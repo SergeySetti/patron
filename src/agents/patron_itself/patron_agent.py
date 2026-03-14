@@ -6,6 +6,10 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from langgraph.graph.state import CompiledStateGraph
 
+from agents.patron_itself.repositories.memories_repository import MemoriesRepository
+from agents.patron_itself.tools.memory_tools import create_memory_tools
+from dependencies import app_container
+
 load_dotenv()
 
 
@@ -24,6 +28,16 @@ model = ChatGoogleGenerativeAI(model="gemini-3.1-pro-preview")
 DB_URI = os.getenv("ASSISTANT_SESSIONS_DATABASE_URL")
 MONGODB_URI = os.getenv("MONGODB_URI")
 
+_memory_tools = None
+
+
+def _get_memory_tools() -> list:
+    global _memory_tools
+    if _memory_tools is None:
+        memories_repo = app_container.get(MemoriesRepository)
+        _memory_tools = create_memory_tools(memories_repo)
+    return _memory_tools
+
 
 async def run_agent(message: str, user_id: str = None, thread_id: str = None):
     use_checkpointer = user_id is not None and thread_id is not None
@@ -38,7 +52,7 @@ async def run_agent(message: str, user_id: str = None, thread_id: str = None):
 async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None):
     agent: CompiledStateGraph = create_agent(
         model=model,
-        tools=[get_weather],
+        tools=[get_weather, *_get_memory_tools()],
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
         system_prompt="You are a helpful assistant",
