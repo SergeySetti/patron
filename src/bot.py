@@ -9,7 +9,7 @@ from telegram.ext import (
 )
 
 from dependencies import app_container, AssistantLogger
-from src.agents.patron_itself.patron_agent import run_agent
+from agents.patron_itself.patron_agent import run_agent
 
 logger = app_container.get(AssistantLogger)
 
