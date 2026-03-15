@@ -13,8 +13,11 @@ Owner: **Sergii Setti** (`serhii.setti@pm.me`)
 ```
 bot.py (Telegram entry point)
   ├── /start handler
-  ├── message handler → run_agent()
-  └── job queue (60s) → check_due_tasks() → run_agent()
+  ├── /subscribe handler → Telegram Stars invoice
+  ├── PreCheckoutQueryHandler → approve payment
+  ├── SUCCESSFUL_PAYMENT handler → record transaction + extend subscription
+  ├── message handler → subscription check → run_agent()
+  └── job queue (60s) → check_due_tasks() → run_agent() (no subscription check)
 
 patron_agent.py (Agent orchestration)
   ├── CustomAgentState: user_id, chat_id, preferences, user_timezone
@@ -32,12 +35,13 @@ dependencies.py (DI container via `injector`)
 
 | File                                                           | Purpose                                                                                                   |
 |----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `src/bot.py`                                                   | Telegram bot entry point, handlers, job queue                                                             |
+| `src/bot.py`                                                   | Telegram bot entry point, handlers, payment flow, job queue                                               |
 | `src/task_scheduler.py`                                        | `check_due_tasks()` — polls DB every 60s for due tasks                                                    |
 | `src/dependencies.py`                                          | DI container (`app_container`), binds Qdrant/Mongo/Vectorizer                                             |
 | `src/agents/patron_itself/patron_agent.py`                     | Agent creation, system prompt, `run_agent()`                                                              |
 | `src/agents/patron_itself/repositories/tasks_repository.py`    | MongoDB: `patron_tasks.tasks`                                                                             |
-| `src/agents/patron_itself/repositories/users_repository.py`    | MongoDB: `patron_users.users` (timezone)                                                                  |
+| `src/agents/patron_itself/repositories/users_repository.py`    | MongoDB: `patron_users.users` (timezone, subscription)                                                    |
+| `src/agents/patron_itself/repositories/transactions_repository.py` | MongoDB: `patron_users.transactions` (payment records)                                                |
 | `src/agents/patron_itself/repositories/memories_repository.py` | Qdrant: `memories` collection (768-dim cosine)                                                            |
 | `src/agents/patron_itself/tools/task_tools.py`                 | `create_task`, `list_tasks`, `delete_task`                                                                |
 | `src/agents/patron_itself/tools/user_tools.py`                 | `get_user_timezone`, `set_user_timezone`                                                                  |
@@ -58,7 +62,16 @@ dependencies.py (DI container via `injector`)
 - `get(user_id)` → full user doc or None
 - `get_timezone(user_id)` → IANA string or None
 - `set_timezone(user_id, timezone)` — upsert
+- `get_subscription_status(user_id)` → `"active"` if `subscription_expires_at` is in the future, else `None`
+- `get_subscription_expires_at(user_id)` → datetime or None
+- `extend_subscription(user_id)` → adds 30 days (stacks on remaining time if active, starts from now if expired)
 - Index: `user_id` (unique)
+
+### TransactionsRepository (MongoDB: `patron_users.transactions`)
+- `create(user_id, telegram_payment_charge_id, provider_payment_charge_id, total_amount, currency, is_recurring)` → inserted id
+- `get_by_user(user_id)` → list of transactions, newest first
+- `get_by_charge_id(telegram_payment_charge_id)` → transaction or None
+- Indexes: `user_id`, `telegram_payment_charge_id` (unique)
 
 ### MemoriesRepository (Qdrant: `memories`, 768-dim cosine)
 - `save(user_id, text, metadata=None, created_at=None)` → point_id (UUID)
@@ -73,6 +86,16 @@ dependencies.py (DI container via `injector`)
 2. `_build_system_prompt(user_timezone)` injects current UTC time + timezone instructions
 3. If timezone is unknown → system prompt tells agent to ask user for current time, determine IANA timezone, and call `set_user_timezone`
 4. If timezone is known → system prompt tells agent to use it when converting relative times to UTC for tasks
+
+## Payments & Subscription
+
+- **Provider**: Telegram Stars (currency `XTR`), no external gateway
+- **Plan**: Monthly, 2 Stars (configurable in `bot.py` constants)
+- **Flow**: `/subscribe` → Stars invoice → pre-checkout approval → successful payment → `extend_subscription()` + transaction record
+- **Stacking**: Re-subscribing while active adds 30 days on top of remaining time
+- **Gate**: `bot_participation` checks `get_subscription_status()` before processing messages; inactive users get a `/subscribe` reminder
+- **Task scheduler**: Not gated — due tasks always fire regardless of subscription status
+- See `docs/payments.md` for full details
 
 ## Environment Variables
 
@@ -108,7 +131,7 @@ docker compose up qdrant -d             # start Qdrant for repository tests
 
 - **conftest.py**: in-memory Qdrant (`:memory:`), `mongomock`, mocked vectorizer (deterministic 768-dim vectors)
 - Agent tests (`test_patron_agent.py`) are **skipped** — require real Gemini API
-- 46 tests passing, 2 skipped
+- 61 tests passing, 2 skipped
 
 ## Docker
 

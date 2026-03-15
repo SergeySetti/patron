@@ -33,6 +33,9 @@ Say "remind me to renew my domain on March 20th" and it's done. Patron understan
 🔗 **Context that carries over.**
 Unlike basic chatbots that forget you after each message, Patron maintains a continuous conversation. It knows your timezone, your preferences, and builds a picture of what matters to you over time.
 
+⭐ **Simple, transparent pricing.**
+One command — `/subscribe` — and you're in. Powered by Telegram Stars, so payment happens right in the chat. No credit cards, no external signups, no friction.
+
 💬 **Why Telegram?**
 Because it's where you already are. No new app to download, no new habit to build. Just open a chat and start talking to the smartest assistant you've ever had.
 
@@ -66,6 +69,10 @@ Most productivity apps fail because they add friction. Patron removes it entirel
 ### 🔄 It Gets Smarter Over Time
 
 Patron isn't a stateless chatbot. It maintains **persistent context** across every conversation. The more you use it, the better it understands what matters to you. Your preferences, your patterns, your priorities — they all become part of how Patron helps you.
+
+### ⭐ Effortless Subscription
+
+No sign-up forms. No credit card pages. Just type `/subscribe` and pay with Telegram Stars — it takes seconds, and it all happens inside the chat. Your subscription stacks, so topping up early never wastes a single day.
 
 ### 🤔 Why Not Just Use ChatGPT / Notion / Todoist / Apple Reminders?
 

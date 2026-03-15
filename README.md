@@ -105,6 +105,15 @@ Patron stores and retrieves user memories in Qdrant, supporting semantic search 
 
 Create, list, and manage tasks through natural conversation. Tasks are stored in MongoDB with proper UTC timestamps derived from the user's timezone.
 
+### 💳 Telegram Stars Subscription
+
+Patron uses [Telegram Stars](https://core.telegram.org/bots/payments-stars) for payments — no external checkout needed.
+
+- `/subscribe` sends a Stars invoice directly in chat.
+- Subscription lasts 30 days per payment; re-subscribing while active **stacks** the additional month on top of remaining time.
+- Inactive users are prompted to subscribe when they message the bot.
+- Scheduled task reminders always fire regardless of subscription status.
+
 ---
 
 ### 🔎 Linting
