@@ -24,7 +24,7 @@ AWAITING_CUSTOM_PROMPT = 1
 SUBSCRIPTION_TITLE = "Patron Monthly"
 SUBSCRIPTION_DESCRIPTION = "Monthly subscription to Patron AI assistant"
 SUBSCRIPTION_PAYLOAD = "patron_monthly_500"
-SUBSCRIPTION_PRICE = 2  # Telegram Stars
+SUBSCRIPTION_PRICE = 500  # Telegram Stars
 
 # 31 days in seconds, used for subscription expiration logic
 SUBSCRIPTION_PERIOD = 31 * 24 * 60 * 60
