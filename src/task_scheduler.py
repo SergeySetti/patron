@@ -37,6 +37,10 @@ async def check_due_tasks(context: ContextTypes.DEFAULT_TYPE) -> None:
                 f"{task_text}"
             )
             response = await run_agent(prompt, user_id, chat_id)
+            if not response or "messages" not in response or not response["messages"]:
+                logger.warning(f"No valid response from agent for task {task_id}")
+                logger.warning(f"Response content: {response}")
+                continue
             agent_reply = response["messages"][-1].content[-1]["text"]
 
             await context.bot.send_message(chat_id=int(chat_id), text=agent_reply)
