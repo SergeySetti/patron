@@ -6,6 +6,7 @@ from typing import NewType
 
 from dotenv import load_dotenv
 from injector import Injector, Module, provider, singleton
+from pymongo import MongoClient
 from qdrant_client import QdrantClient
 
 from services.vectorisation.VectorizerGemini import VectorizerGemini
@@ -13,6 +14,7 @@ from services.vectorisation.VectorizerGemini import VectorizerGemini
 load_dotenv()
 
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 
 AssistantLogger = NewType("AssistantLogger", logging.Logger)
 
@@ -22,6 +24,7 @@ class PatronModule(Module):
     def configure(self, binder) -> None:
         binder.bind(VectorizerGemini, to=VectorizerGemini(output_dimensionality=768, model="gemini-embedding-001"), scope=singleton)
         binder.bind(QdrantClient, to=QdrantClient(url=QDRANT_URL), scope=singleton)
+        binder.bind(MongoClient, to=MongoClient(MONGODB_URI), scope=singleton)
 
     # ------------------------------------------------------------------
     # Loggers

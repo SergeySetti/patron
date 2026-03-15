@@ -21,6 +21,8 @@ dependencies = [
     "injector~=0.24",
     "requests",
     "qdrant-client~=1.17.1",
+    "pymongo~=4.12",
+    "mongomock~=4.3",
 ]
 
 [tool.setuptools.packages.find]

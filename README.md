@@ -12,7 +12,7 @@ Patron is a Telegram bot that acts as a personal planning and remembering assist
 | 🦜 **LangChain** | Agentic framework |
 | ✨ **Google Gemini 3.1 Pro** | LLM |
 | 💬 **python-telegram-bot** | Telegram integration |
-| 🍃 **MongoDB** | Conversation state persistence |
+| 🍃 **MongoDB** | Conversation state & user data persistence |
 | 🔍 **Qdrant** | Vector database |
 | 🐳 **Docker Compose** | Containerized deployment |
 
@@ -84,6 +84,28 @@ python -m pytest src/tests/repositories/ -v
 ```
 
 Qdrant will be available at `http://localhost:6333`.
+
+---
+
+## 🧩 Features
+
+### 🕐 Timezone-Aware Task Scheduling
+
+Patron is timezone-aware when creating and managing tasks:
+
+- **User timezone storage** — each user's IANA timezone (e.g. `Europe/Moscow`, `America/New_York`) is persisted in MongoDB via `UsersRepository`.
+- **Automatic detection** — if the agent doesn't know a user's timezone, it asks for the current time, determines the IANA timezone, and saves it for future use.
+- **UTC system clock** — the current UTC time is injected into the system prompt on every invocation, so the agent always knows "what time it is" and can convert relative times accurately.
+
+### 🧠 Long-Term Memory
+
+Patron stores and retrieves user memories in Qdrant, supporting semantic search and date-range filtering.
+
+### 📋 Task Management
+
+Create, list, and manage tasks through natural conversation. Tasks are stored in MongoDB with proper UTC timestamps derived from the user's timezone.
+
+---
 
 ### 🔎 Linting
 
