@@ -10,6 +10,7 @@ from telegram.ext import (
 
 from dependencies import app_container, AssistantLogger
 from agents.patron_itself.patron_agent import run_agent
+from task_scheduler import check_due_tasks
 
 logger = app_container.get(AssistantLogger)
 
@@ -48,6 +49,10 @@ def main() -> None:
     application.add_handler(
         MessageHandler(telegram.ext.filters.TEXT, bot_participation)
     )
+
+    # Schedule task checker to run every 60 seconds
+    application.job_queue.run_repeating(check_due_tasks, interval=60, first=10)
+    logger.info("Task scheduler started (checking every 60s)")
 
     logger.info("Bot is polling for updates...")
     application.run_polling()
