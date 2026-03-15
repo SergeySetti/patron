@@ -21,7 +21,7 @@ dependencies = [
     "injector~=0.24",
     "requests",
     "qdrant-client~=1.17.1",
-    "pymongo~=4.12",
+    "pymongo~=4.16.0",
     "mongomock~=4.3",
 ]
 
