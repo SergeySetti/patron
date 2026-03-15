@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 
 SUBSCRIPTION_DURATION = timedelta(days=30)
+TRIAL_DURATION = timedelta(days=14)
 
 
 def _utcnow() -> datetime:
@@ -66,6 +67,26 @@ class UsersRepository:
         if user:
             return user.get("subscription_expires_at")
         return None
+
+    def start_trial(self, user_id: str) -> datetime | None:
+        """Grant a 14-day free trial if the user has never had a subscription.
+
+        Returns the trial expiry datetime, or None if the user already has
+        (or had) a subscription.
+        """
+        user = self._collection.find_one(
+            {"user_id": user_id}, {"subscription_expires_at": 1}
+        )
+        if user and user.get("subscription_expires_at") is not None:
+            return None  # already had a subscription or trial
+
+        trial_expires = _utcnow() + TRIAL_DURATION
+        self._collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"subscription_expires_at": trial_expires}},
+            upsert=True,
+        )
+        return trial_expires
 
     def extend_subscription(self, user_id: str) -> datetime:
         """Add 30 days to the subscription, stacking on remaining time.

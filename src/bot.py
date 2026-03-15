@@ -1,4 +1,5 @@
 import os
+
 import telegram
 from telegram import LabeledPrice, Update
 from telegram.ext import (
@@ -9,22 +10,33 @@ from telegram.ext import (
     PreCheckoutQueryHandler,
 )
 
-from dependencies import app_container, AssistantLogger
 from agents.patron_itself.patron_agent import run_agent
-from agents.patron_itself.repositories.users_repository import UsersRepository
 from agents.patron_itself.repositories.transactions_repository import TransactionsRepository
+from agents.patron_itself.repositories.users_repository import UsersRepository
+from dependencies import app_container, AssistantLogger
 from task_scheduler import check_due_tasks
 
 SUBSCRIPTION_TITLE = "Patron Monthly"
 SUBSCRIPTION_DESCRIPTION = "Monthly subscription to Patron AI assistant"
 SUBSCRIPTION_PAYLOAD = "patron_monthly_500"
 SUBSCRIPTION_PRICE = 2  # Telegram Stars
-SUBSCRIPTION_PERIOD = 2592000  # 30 days in seconds
+
+# 31 days in seconds, used for subscription expiration logic
+SUBSCRIPTION_PERIOD = 31 * 24 * 60 * 60
 
 logger = app_container.get(AssistantLogger)
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id = update.effective_user.id
+    user_id = str(update.effective_user.id)
+
+    # Grant 14-day free trial for brand-new users
+    users_repo = app_container.get(UsersRepository)
+    trial_expires = users_repo.start_trial(user_id)
+    if trial_expires:
+        trial_str = trial_expires.strftime("%Y-%m-%d %H:%M UTC")
+        logger.info(f"Trial started for user {user_id} until {trial_str}")
+
     welcome_text = (
         "Meet *Patron* — the AI-powered personal assistant that lives inside Telegram.\n"
         "\n"
@@ -48,8 +60,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Because it's where you already are. No new app to download, no new habit to build. "
         "Just open a chat and start talking to the smartest assistant you've ever had."
     )
+    trial_note = ""
+    if trial_expires:
+        trial_note = (
+            "\n\n\u2B50 *Your 14-day free trial has started!* "
+            "After it ends, use /subscribe to keep using Patron."
+        )
+
     await context.bot.send_message(
-        chat_id=user_id, text=welcome_text, parse_mode="Markdown"
+        chat_id=update.effective_chat.id,
+        text=welcome_text + trial_note,
+        parse_mode="Markdown",
     )
 
 
@@ -135,7 +156,6 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 
 def main() -> None:
-
     logger.info("Starting Telegram bot...")
     application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 

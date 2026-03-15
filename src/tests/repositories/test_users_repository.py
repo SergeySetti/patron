@@ -3,7 +3,9 @@ from unittest.mock import patch
 
 import pytest
 
-from agents.patron_itself.repositories.users_repository import UsersRepository, SUBSCRIPTION_DURATION
+from agents.patron_itself.repositories.users_repository import (
+    UsersRepository, SUBSCRIPTION_DURATION, TRIAL_DURATION,
+)
 
 TEST_USER_ID = "test_user_42"
 
@@ -126,4 +128,29 @@ class TestSubscription:
         repo.extend_subscription(TEST_USER_ID)
 
         assert repo.get_timezone(TEST_USER_ID) == "Europe/London"
+        assert repo.get_subscription_status(TEST_USER_ID) == "active"
+
+
+class TestTrial:
+
+    def test_start_trial_for_new_user(self, repo):
+        now = datetime(2025, 6, 1, tzinfo=timezone.utc)
+        with patch(MOCK_UTCNOW, return_value=now):
+            expires = repo.start_trial(TEST_USER_ID)
+
+        assert expires == now + TRIAL_DURATION
+
+    def test_start_trial_returns_none_if_already_had_subscription(self, repo):
+        repo.extend_subscription(TEST_USER_ID)
+
+        assert repo.start_trial(TEST_USER_ID) is None
+
+    def test_start_trial_returns_none_if_trial_already_granted(self, repo):
+        repo.start_trial(TEST_USER_ID)
+
+        assert repo.start_trial(TEST_USER_ID) is None
+
+    def test_trial_makes_subscription_active(self, repo):
+        repo.start_trial(TEST_USER_ID)
+
         assert repo.get_subscription_status(TEST_USER_ID) == "active"

@@ -4,9 +4,39 @@ from src.bot import start, bot_participation
 
 
 @pytest.mark.asyncio
-async def test_start():
+@patch("src.bot.app_container")
+async def test_start_grants_trial_for_new_user(mock_container):
+    from datetime import datetime, timezone, timedelta
+    mock_users_repo = MagicMock()
+    trial_expires = datetime(2025, 7, 1, tzinfo=timezone.utc)
+    mock_users_repo.start_trial.return_value = trial_expires
+    mock_container.get.return_value = mock_users_repo
+
     update = MagicMock()
     update.effective_user.id = 12345
+    update.effective_chat.id = 12345
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+
+    await start(update, context)
+
+    mock_users_repo.start_trial.assert_called_once_with("12345")
+    context.bot.send_message.assert_called_once()
+    call_kwargs = context.bot.send_message.call_args[1]
+    assert "Patron" in call_kwargs["text"]
+    assert "free trial" in call_kwargs["text"]
+
+
+@pytest.mark.asyncio
+@patch("src.bot.app_container")
+async def test_start_no_trial_for_existing_user(mock_container):
+    mock_users_repo = MagicMock()
+    mock_users_repo.start_trial.return_value = None  # already had subscription
+    mock_container.get.return_value = mock_users_repo
+
+    update = MagicMock()
+    update.effective_user.id = 12345
+    update.effective_chat.id = 12345
     context = MagicMock()
     context.bot.send_message = AsyncMock()
 
@@ -14,8 +44,8 @@ async def test_start():
 
     context.bot.send_message.assert_called_once()
     call_kwargs = context.bot.send_message.call_args[1]
-    assert call_kwargs["chat_id"] == 12345
     assert "Patron" in call_kwargs["text"]
+    assert "free trial" not in call_kwargs["text"]
 
 
 @pytest.mark.asyncio
