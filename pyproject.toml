@@ -20,7 +20,7 @@ dependencies = [
     "flake8",
     "injector~=0.24",
     "requests",
-    "qdrant-client~=1.17.1",
+    "qdrant-client~=1.14.1",
     "pymongo~=4.15.5",
     "mongomock~=4.3",
 ]
