@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent, AgentState
@@ -7,7 +8,11 @@ from langgraph.checkpoint.mongodb import MongoDBSaver
 from langgraph.graph.state import CompiledStateGraph
 
 from agents.patron_itself.repositories.memories_repository import MemoriesRepository
+from agents.patron_itself.repositories.tasks_repository import TasksRepository
+from agents.patron_itself.repositories.users_repository import UsersRepository
 from agents.patron_itself.tools.memory_tools import create_memory_tools
+from agents.patron_itself.tools.task_tools import create_task_tools
+from agents.patron_itself.tools.user_tools import create_user_tools
 from dependencies import app_container
 
 load_dotenv()
@@ -15,8 +20,9 @@ load_dotenv()
 
 class CustomAgentState(AgentState):
     user_id: str
+    chat_id: str
     preferences: dict
-
+    user_timezone: str
 
 def get_weather(city: str) -> str:
     """Get weather for a given city"""
@@ -29,6 +35,8 @@ DB_URI = os.getenv("ASSISTANT_SESSIONS_DATABASE_URL")
 MONGODB_URI = os.getenv("MONGODB_URI")
 
 _memory_tools = None
+_task_tools = None
+_user_tools = None
 
 
 def _get_memory_tools() -> list:
@@ -37,6 +45,28 @@ def _get_memory_tools() -> list:
         memories_repo = app_container.get(MemoriesRepository)
         _memory_tools = create_memory_tools(memories_repo)
     return _memory_tools
+
+
+def _get_task_tools() -> list:
+    global _task_tools
+    if _task_tools is None:
+        tasks_repo = app_container.get(TasksRepository)
+        _task_tools = create_task_tools(tasks_repo)
+    return _task_tools
+
+
+def _get_user_tools() -> list:
+    global _user_tools
+    if _user_tools is None:
+        users_repo = app_container.get(UsersRepository)
+        _user_tools = create_user_tools(users_repo)
+    return _user_tools
+
+
+def _get_user_timezone(user_id: str) -> str:
+    """Fetch stored timezone for the user, or empty string if unknown."""
+    users_repo = app_container.get(UsersRepository)
+    return users_repo.get_timezone(user_id) or ""
 
 
 async def run_agent(message: str, user_id: str = None, thread_id: str = None):
@@ -49,13 +79,37 @@ async def run_agent(message: str, user_id: str = None, thread_id: str = None):
         return await _invoke_agent(message, user_id, thread_id)
 
 
+def _build_system_prompt(user_timezone: str) -> str:
+    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    base = f"You are a helpful assistant. Current time: {now_utc}."
+
+    if user_timezone:
+        tz_info = (
+            f" The user's timezone is {user_timezone}. "
+            "Always convert relative times (e.g. 'tomorrow at 9am') to UTC "
+            "using this timezone when creating tasks."
+        )
+    else:
+        tz_info = (
+            " You do not know the user's timezone yet. "
+            "When the user asks to schedule a task or anything time-related, "
+            "ask the user for their current time, "
+            "determine the IANA timezone from it, and save it with set_user_timezone "
+            "before proceeding."
+        )
+
+    return base + tz_info
+
+
 async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None):
+    user_timezone = _get_user_timezone(user_id) if user_id else ""
+
     agent: CompiledStateGraph = create_agent(
         model=model,
-        tools=[get_weather, *_get_memory_tools()],
+        tools=[get_weather, *_get_memory_tools(), *_get_task_tools(), *_get_user_tools()],
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
-        system_prompt="You are a helpful assistant",
+        system_prompt=_build_system_prompt(user_timezone),
     )
 
     config = {"configurable": {"thread_id": thread_id}} if thread_id else None
@@ -64,6 +118,8 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         {  # noqa
             "messages": [{"role": "user", "content": message}],
             "user_id": user_id,
+            "chat_id": thread_id or "",
+            "user_timezone": user_timezone,
         },
         config,
     )

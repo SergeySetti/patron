@@ -1,7 +1,9 @@
 import math
 
+import mongomock
 import pytest
 from injector import Injector, Module, singleton
+from pymongo import MongoClient
 from qdrant_client import QdrantClient
 from unittest.mock import MagicMock
 
@@ -31,6 +33,7 @@ class TestPatronModule(Module):
     def configure(self, binder) -> None:
         binder.bind(QdrantClient, to=QdrantClient(location=":memory:"), scope=singleton)
         binder.bind(VectorizerGemini, to=_build_vectorizer_mock(), scope=singleton)
+        binder.bind(MongoClient, to=mongomock.MongoClient(), scope=singleton)
 
 
 @pytest.fixture()

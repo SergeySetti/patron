@@ -17,7 +17,8 @@
       "Bash(wc -l /c/Farm/patron/src/*/__init__.py /c/Farm/patron/src/*/*/__init__.py)",
       "Bash(python -m pytest src/tests/repositories/ -v -s)",
       "Bash(git add:*)",
-      "Bash(python -m pytest src/tests/repositories/test_memories_repository.py -v)"
+      "Bash(python -m pytest src/tests/repositories/test_memories_repository.py -v)",
+      "Bash(venv/Scripts/python -m pytest src/tests/ -v)"
     ]
   }
 }
