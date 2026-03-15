@@ -48,7 +48,8 @@ class UsersRepository:
         """Create or update the user's timezone."""
         self._collection.update_one(
             {"user_id": user_id},
-            {"$set": {"timezone": timezone}},
+            {"$set": {"timezone": timezone},
+             "$setOnInsert": {"created_at": _utcnow()}},
             upsert=True,
         )
 
@@ -65,7 +66,8 @@ class UsersRepository:
         """Create or update the user's custom system prompt section."""
         self._collection.update_one(
             {"user_id": user_id},
-            {"$set": {"custom_prompt": custom_prompt}},
+            {"$set": {"custom_prompt": custom_prompt},
+             "$setOnInsert": {"created_at": _utcnow()}},
             upsert=True,
         )
 
@@ -107,7 +109,8 @@ class UsersRepository:
         trial_expires = _utcnow() + TRIAL_DURATION
         self._collection.update_one(
             {"user_id": user_id},
-            {"$set": {"subscription_expires_at": trial_expires}},
+            {"$set": {"subscription_expires_at": trial_expires},
+             "$setOnInsert": {"created_at": _utcnow()}},
             upsert=True,
         )
         return trial_expires
@@ -129,7 +132,8 @@ class UsersRepository:
 
         self._collection.update_one(
             {"user_id": user_id},
-            {"$set": {"subscription_expires_at": new_expires}},
+            {"$set": {"subscription_expires_at": new_expires},
+             "$setOnInsert": {"created_at": _utcnow()}},
             upsert=True,
         )
         return new_expires

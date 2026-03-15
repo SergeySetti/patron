@@ -7,13 +7,13 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from langgraph.graph.state import CompiledStateGraph
 
+from agents.patron_itself.middleware import ToolLoggingMiddleware
 from agents.patron_itself.repositories.memories_repository import MemoriesRepository
 from agents.patron_itself.repositories.tasks_repository import TasksRepository
 from agents.patron_itself.repositories.users_repository import UsersRepository
 from agents.patron_itself.tools.memory_tools import create_memory_tools
 from agents.patron_itself.tools.task_tools import create_task_tools
 from agents.patron_itself.tools.user_tools import create_user_tools
-from agents.patron_itself.middleware import ToolLoggingMiddleware
 from dependencies import app_container
 
 load_dotenv()
@@ -24,10 +24,6 @@ class CustomAgentState(AgentState):
     chat_id: str
     preferences: dict
     user_timezone: str
-
-def get_weather(city: str) -> str:
-    """Get weather for a given city"""
-    return f"It's always sunny in {city}!"
 
 
 model = ChatGoogleGenerativeAI(model="gemini-3.1-pro-preview")
@@ -119,7 +115,7 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
 
     agent: CompiledStateGraph = create_agent(
         model=model,
-        tools=[get_weather, *_get_memory_tools(), *_get_task_tools(), *_get_user_tools()],
+        tools=[*_get_memory_tools(), *_get_task_tools(), *_get_user_tools()],
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
         system_prompt=_build_system_prompt(user_timezone, custom_prompt),

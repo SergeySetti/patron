@@ -68,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     trial_note = ""
     if trial_expires:
         trial_note = (
-            "\n\n\u2B50 *Your 14-day free trial has started!* "
+            f"\n\n\u2B50 *Your {SUBSCRIPTION_PERIOD // (24 * 60 * 60)}-day free trial has started!* "
             "After it ends, use /subscribe to keep using Patron."
         )
 
