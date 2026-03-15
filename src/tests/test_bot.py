@@ -5,26 +5,28 @@ from src.bot import start, bot_participation
 
 @pytest.mark.asyncio
 async def test_start():
-    # Arrange
     update = MagicMock()
     update.effective_user.id = 12345
     context = MagicMock()
     context.bot.send_message = AsyncMock()
 
-    # Act
     await start(update, context)
 
-    # Assert
-    context.bot.send_message.assert_called_once_with(
-        chat_id=12345,
-        text='Wellcome'
-    )
+    context.bot.send_message.assert_called_once()
+    call_kwargs = context.bot.send_message.call_args[1]
+    assert call_kwargs["chat_id"] == 12345
+    assert "Patron" in call_kwargs["text"]
 
 
 @pytest.mark.asyncio
+@patch("src.bot.app_container")
 @patch("src.bot.run_agent")
-async def test_bot_participation(mock_run_agent):
-    # Arrange
+async def test_bot_participation(mock_run_agent, mock_container):
+    # Arrange — mock subscription as active
+    mock_users_repo = MagicMock()
+    mock_users_repo.get_subscription_status.return_value = "active"
+    mock_container.get.return_value = mock_users_repo
+
     agent_response_text = "It's always sunny in New York!"
     mock_message = MagicMock()
     mock_message.content = [{"text": agent_response_text}]
@@ -54,3 +56,26 @@ async def test_bot_participation(mock_run_agent):
         reply_to_message_id=111,
         text=agent_response_text,
     )
+
+
+@pytest.mark.asyncio
+@patch("src.bot.app_container")
+@patch("src.bot.run_agent")
+async def test_bot_participation_inactive_subscription(mock_run_agent, mock_container):
+    mock_users_repo = MagicMock()
+    mock_users_repo.get_subscription_status.return_value = None
+    mock_container.get.return_value = mock_users_repo
+
+    update = MagicMock()
+    update.message.text = "Hello"
+    update.message.chat_id = 67890
+    update.message.message_id = 111
+    update.effective_user.id = 12345
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+
+    await bot_participation(update, context)
+
+    mock_run_agent.assert_not_called()
+    call_kwargs = context.bot.send_message.call_args[1]
+    assert "/subscribe" in call_kwargs["text"]
