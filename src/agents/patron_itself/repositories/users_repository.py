@@ -52,6 +52,30 @@ class UsersRepository:
             upsert=True,
         )
 
+    def get_custom_prompt(self, user_id: str) -> str | None:
+        """Return the user's custom system prompt section, or None."""
+        user = self._collection.find_one(
+            {"user_id": user_id}, {"custom_prompt": 1}
+        )
+        if user:
+            return user.get("custom_prompt")
+        return None
+
+    def set_custom_prompt(self, user_id: str, custom_prompt: str) -> None:
+        """Create or update the user's custom system prompt section."""
+        self._collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"custom_prompt": custom_prompt}},
+            upsert=True,
+        )
+
+    def clear_custom_prompt(self, user_id: str) -> None:
+        """Remove the user's custom system prompt section."""
+        self._collection.update_one(
+            {"user_id": user_id},
+            {"$unset": {"custom_prompt": ""}},
+        )
+
     def get_subscription_status(self, user_id: str) -> str | None:
         """Return 'active' if subscription hasn't expired, else None."""
         expires = self.get_subscription_expires_at(user_id)

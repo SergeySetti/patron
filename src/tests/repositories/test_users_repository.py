@@ -154,3 +154,38 @@ class TestTrial:
         repo.start_trial(TEST_USER_ID)
 
         assert repo.get_subscription_status(TEST_USER_ID) == "active"
+
+
+class TestCustomPrompt:
+
+    def test_get_custom_prompt_returns_none_for_new_user(self, repo):
+        assert repo.get_custom_prompt(TEST_USER_ID) is None
+
+    def test_set_and_get_custom_prompt(self, repo):
+        repo.set_custom_prompt(TEST_USER_ID, "Always reply in Ukrainian")
+
+        assert repo.get_custom_prompt(TEST_USER_ID) == "Always reply in Ukrainian"
+
+    def test_set_custom_prompt_updates_existing(self, repo):
+        repo.set_custom_prompt(TEST_USER_ID, "Be brief")
+        repo.set_custom_prompt(TEST_USER_ID, "Be very detailed")
+
+        assert repo.get_custom_prompt(TEST_USER_ID) == "Be very detailed"
+
+    def test_clear_custom_prompt(self, repo):
+        repo.set_custom_prompt(TEST_USER_ID, "Some instructions")
+        repo.clear_custom_prompt(TEST_USER_ID)
+
+        assert repo.get_custom_prompt(TEST_USER_ID) is None
+
+    def test_clear_custom_prompt_noop_for_new_user(self, repo):
+        repo.clear_custom_prompt(TEST_USER_ID)  # should not raise
+
+        assert repo.get_custom_prompt(TEST_USER_ID) is None
+
+    def test_custom_prompt_does_not_affect_timezone(self, repo):
+        repo.set_timezone(TEST_USER_ID, "Europe/Kyiv")
+        repo.set_custom_prompt(TEST_USER_ID, "Be funny")
+
+        assert repo.get_timezone(TEST_USER_ID) == "Europe/Kyiv"
+        assert repo.get_custom_prompt(TEST_USER_ID) == "Be funny"

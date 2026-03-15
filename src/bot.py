@@ -19,6 +19,7 @@ from dependencies import app_container, AssistantLogger
 from task_scheduler import check_due_tasks
 
 CONFIRMING_DELETE_MEMORIES = 0
+AWAITING_CUSTOM_PROMPT = 1
 
 SUBSCRIPTION_TITLE = "Patron Monthly"
 SUBSCRIPTION_DESCRIPTION = "Monthly subscription to Patron AI assistant"
@@ -235,6 +236,52 @@ async def contacts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+async def custom_prompt_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Show current custom prompt and ask user for a new one."""
+    user_id = str(update.effective_user.id)
+    users_repo = app_container.get(UsersRepository)
+    current = users_repo.get_custom_prompt(user_id)
+
+    if current:
+        text = (
+            f"*Your current custom prompt:*\n{current}\n\n"
+            "Send new text to replace it, type `clear` to remove, or /cancel."
+        )
+    else:
+        text = (
+            "You don't have a custom prompt yet.\n\n"
+            "Send me the text you'd like to include in every conversation "
+            "(preferences, style, goals, etc.) or /cancel."
+        )
+
+    await update.message.reply_text(text, parse_mode="Markdown")
+    return AWAITING_CUSTOM_PROMPT
+
+
+async def custom_prompt_receive(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Save or clear the user's custom prompt."""
+    user_id = str(update.effective_user.id)
+    users_repo = app_container.get(UsersRepository)
+    text = update.message.text.strip()
+
+    if text.lower() == "clear":
+        users_repo.clear_custom_prompt(user_id)
+        await update.message.reply_text("Custom prompt cleared.")
+    else:
+        users_repo.set_custom_prompt(user_id, text)
+        await update.message.reply_text(
+            "Custom prompt saved! It will be included in all future conversations."
+        )
+
+    return ConversationHandler.END
+
+
+async def custom_prompt_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Cancel the custom prompt flow."""
+    await update.message.reply_text("Cancelled.")
+    return ConversationHandler.END
+
+
 async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
     user_id = str(update.effective_user.id)
@@ -292,6 +339,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel", delete_memories_cancel)],
     )
     application.add_handler(delete_memories_handler)
+
+    custom_prompt_handler = ConversationHandler(
+        entry_points=[CommandHandler("customprompt", custom_prompt_start)],
+        states={
+            AWAITING_CUSTOM_PROMPT: [
+                CommandHandler("cancel", custom_prompt_cancel),
+                MessageHandler(telegram.ext.filters.TEXT & ~telegram.ext.filters.COMMAND, custom_prompt_receive),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", custom_prompt_cancel)],
+    )
+    application.add_handler(custom_prompt_handler)
 
     application.add_handler(
         MessageHandler(telegram.ext.filters.TEXT, bot_participation)

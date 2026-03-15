@@ -80,7 +80,13 @@ async def run_agent(message: str, user_id: str = None, thread_id: str = None):
         return await _invoke_agent(message, user_id, thread_id)
 
 
-def _build_system_prompt(user_timezone: str) -> str:
+def _get_user_custom_prompt(user_id: str) -> str:
+    """Fetch stored custom prompt for the user, or empty string."""
+    users_repo = app_container.get(UsersRepository)
+    return users_repo.get_custom_prompt(user_id) or ""
+
+
+def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     base = f"You are a helpful assistant. Current time: {now_utc}."
 
@@ -99,18 +105,24 @@ def _build_system_prompt(user_timezone: str) -> str:
             "before proceeding."
         )
 
-    return base + tz_info
+    prompt = base + tz_info
+
+    if custom_prompt:
+        prompt += f"\n\nUser instructions:\n{custom_prompt}"
+
+    return prompt
 
 
 async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None):
     user_timezone = _get_user_timezone(user_id) if user_id else ""
+    custom_prompt = _get_user_custom_prompt(user_id) if user_id else ""
 
     agent: CompiledStateGraph = create_agent(
         model=model,
         tools=[get_weather, *_get_memory_tools(), *_get_task_tools(), *_get_user_tools()],
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
-        system_prompt=_build_system_prompt(user_timezone),
+        system_prompt=_build_system_prompt(user_timezone, custom_prompt),
         middleware=[ToolLoggingMiddleware()],
     )
 
