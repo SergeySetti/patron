@@ -21,3 +21,13 @@ class ToolLoggingMiddleware(AgentMiddleware):
         tool_args = request.tool_call["args"]
         logger.info(f"Tool call: {tool_name} | args: {tool_args}")
         return handler(request)
+
+    async def awrap_tool_call(
+            self,
+            request: ToolCallRequest,
+            handler: Callable[[ToolCallRequest], Union[ToolMessage, Command]],
+    ) -> Union[ToolMessage, Command]:
+        tool_name = request.tool_call["name"]
+        tool_args = request.tool_call["args"]
+        logger.info(f"Tool call: {tool_name} | args: {tool_args}")
+        return await handler(request)
