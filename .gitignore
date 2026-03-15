@@ -78,3 +78,4 @@ dmypy.json
 .pytype/
 cython_debug/
 /.github/aw/
+/.claude/settings.local.json

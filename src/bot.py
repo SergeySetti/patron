@@ -16,8 +16,32 @@ logger = app_container.get(AssistantLogger)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    test = 'Wellcome'
-    await context.bot.send_message(chat_id=user_id, text=test)
+    welcome_text = (
+        "Meet *Patron* — the AI-powered personal assistant that lives inside Telegram.\n"
+        "\n"
+        "*Your memory, supercharged.*\n"
+        "We forget things. Patron doesn't. Tell it anything — a business idea at 2am, "
+        "a book recommendation from a friend, a recipe you stumbled upon — and it stores "
+        "it with deep semantic understanding. Weeks later, ask \"what was that startup idea "
+        "about logistics?\" and Patron pulls up exactly what you said. No folders. No tags. Just ask.\n"
+        "\n"
+        "*Tasks without the task app.*\n"
+        "Say \"remind me to renew my domain on March 20th\" and it's done. Patron understands "
+        "natural language, handles timezones automatically, and nudges you right in Telegram "
+        "when the moment comes. No separate app to check, no notifications to configure.\n"
+        "\n"
+        "*Context that carries over.*\n"
+        "Unlike basic chatbots that forget you after each message, Patron maintains a continuous "
+        "conversation. It knows your timezone, your preferences, and builds a picture of what "
+        "matters to you over time.\n"
+        "\n"
+        "*Why Telegram?*\n"
+        "Because it's where you already are. No new app to download, no new habit to build. "
+        "Just open a chat and start talking to the smartest assistant you've ever had."
+    )
+    await context.bot.send_message(
+        chat_id=user_id, text=welcome_text, parse_mode="Markdown"
+    )
 
 
 async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

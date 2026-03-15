@@ -13,6 +13,7 @@ from agents.patron_itself.repositories.users_repository import UsersRepository
 from agents.patron_itself.tools.memory_tools import create_memory_tools
 from agents.patron_itself.tools.task_tools import create_task_tools
 from agents.patron_itself.tools.user_tools import create_user_tools
+from agents.patron_itself.middleware import ToolLoggingMiddleware
 from dependencies import app_container
 
 load_dotenv()
@@ -110,6 +111,7 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
         system_prompt=_build_system_prompt(user_timezone),
+        middleware=[ToolLoggingMiddleware()],
     )
 
     config = {"configurable": {"thread_id": thread_id}} if thread_id else None
