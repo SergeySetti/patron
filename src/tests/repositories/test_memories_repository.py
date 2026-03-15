@@ -150,3 +150,23 @@ class TestMemoriesRepository:
         texts = [r["text"] for r in results]
         assert "A's memory" in texts
         assert "B's memory" not in texts
+
+    def test_delete_all_for_user(self, repo):
+        repo.save(TEST_USER_ID, "Memory one")
+        repo.save(TEST_USER_ID, "Memory two")
+        repo.save(TEST_USER_ID, "Memory three")
+        repo.save("other_user", "Other user's memory")
+
+        count = repo.delete_all_for_user(TEST_USER_ID)
+
+        assert count == 3
+        results = repo.find_by_date_range(TEST_USER_ID)
+        assert len(results) == 0
+        # Other user's memories should be untouched
+        other_results = repo.find_by_date_range("other_user")
+        assert len(other_results) == 1
+
+    def test_delete_all_for_user_empty(self, repo):
+        count = repo.delete_all_for_user("nonexistent_user")
+
+        assert count == 0

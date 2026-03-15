@@ -3,7 +3,9 @@ from datetime import datetime, timezone
 
 from injector import inject
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, DatetimeRange
+from qdrant_client.models import (
+    Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, DatetimeRange, FilterSelector,
+)
 
 from services.vectorisation.VectorizerGemini import VectorizerGemini
 from services.vectorisation.vectorizer_gemini.task_types import RETRIEVAL_DOCUMENT, RETRIEVAL_QUERY
@@ -100,3 +102,21 @@ class MemoriesRepository:
     def delete(self, point_id: str):
         """Delete a memory by its id."""
         self.qdrant_client.delete(collection_name=COLLECTION_NAME, points_selector=[point_id])
+
+    def delete_all_for_user(self, user_id: str) -> int:
+        """Delete all memories for a user. Returns the number of deleted memories."""
+        # First count how many memories exist
+        results, _offset = self.qdrant_client.scroll(
+            collection_name=COLLECTION_NAME,
+            scroll_filter=Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))]),
+            limit=10000,
+        )
+        count = len(results)
+        if count > 0:
+            self.qdrant_client.delete(
+                collection_name=COLLECTION_NAME,
+                points_selector=FilterSelector(
+                    filter=Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))])
+                ),
+            )
+        return count

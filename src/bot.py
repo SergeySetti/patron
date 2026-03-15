@@ -6,15 +6,19 @@ from telegram.ext import (
     CommandHandler,
     Application,
     ContextTypes,
+    ConversationHandler,
     MessageHandler,
     PreCheckoutQueryHandler,
 )
 
 from agents.patron_itself.patron_agent import run_agent
+from agents.patron_itself.repositories.memories_repository import MemoriesRepository
 from agents.patron_itself.repositories.transactions_repository import TransactionsRepository
 from agents.patron_itself.repositories.users_repository import UsersRepository
 from dependencies import app_container, AssistantLogger
 from task_scheduler import check_due_tasks
+
+CONFIRMING_DELETE_MEMORIES = 0
 
 SUBSCRIPTION_TITLE = "Patron Monthly"
 SUBSCRIPTION_DESCRIPTION = "Monthly subscription to Patron AI assistant"
@@ -122,6 +126,115 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
     )
 
 
+async def delete_memories_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Ask the user to confirm deletion of all their memories."""
+    await update.message.reply_text(
+        "This will permanently delete ALL your memories. "
+        "Type `delete` to confirm or /cancel to abort.",
+        parse_mode="Markdown",
+    )
+    return CONFIRMING_DELETE_MEMORIES
+
+
+async def delete_memories_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Process the user's confirmation for deleting all memories."""
+    if update.message.text.strip().lower() == "delete":
+        user_id = str(update.effective_user.id)
+        memories_repo = app_container.get(MemoriesRepository)
+        count = memories_repo.delete_all_for_user(user_id)
+        await update.message.reply_text(f"Done. {count} memories deleted.")
+        return ConversationHandler.END
+
+    await update.message.reply_text(
+        "Deletion cancelled. Type `delete` to confirm or /cancel to abort.",
+        parse_mode="Markdown",
+    )
+    return CONFIRMING_DELETE_MEMORIES
+
+
+async def delete_memories_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Cancel the delete memories flow."""
+    await update.message.reply_text("Deletion cancelled.")
+    return ConversationHandler.END
+
+
+TERMS_AND_CONDITIONS = (
+    "*Terms and Conditions*\n"
+    "Last updated: March 15, 2026\n"
+    "\n"
+    "By using Patron you agree to the following terms.\n"
+    "\n"
+    "*1. Service Description*\n"
+    "Patron is an AI\u2011powered personal assistant available through Telegram. "
+    "It provides memory storage, task scheduling, and conversational assistance.\n"
+    "\n"
+    "*2. Account & Eligibility*\n"
+    "You must have a valid Telegram account. One Patron subscription per Telegram user. "
+    "You are responsible for everything that happens under your account.\n"
+    "\n"
+    "*3. Free Trial*\n"
+    "New users receive a 14\u2011day free trial. No payment is required to start the trial. "
+    "After the trial expires you need an active subscription to continue using the service.\n"
+    "\n"
+    "*4. Subscription & Payments*\n"
+    "Subscriptions are billed monthly via Telegram Stars. "
+    "Each payment extends your access by 30 days. "
+    "Payments are non\u2011refundable except where required by applicable law. "
+    "Refund requests can be submitted to the contact email below.\n"
+    "\n"
+    "*5. Your Data*\n"
+    "Patron stores the memories and tasks you create. "
+    "Your data is used solely to provide the service and is never sold to third parties. "
+    "You can delete all your memories at any time with /deletememories. "
+    "We may use anonymized, aggregated analytics to improve the service.\n"
+    "\n"
+    "*6. Acceptable Use*\n"
+    "You agree not to use Patron to store illegal content, "
+    "attempt to abuse or reverse\u2011engineer the service, "
+    "or interfere with other users' access.\n"
+    "\n"
+    "*7. AI Limitations*\n"
+    "Patron is powered by AI and may produce inaccurate or incomplete responses. "
+    "It is not a substitute for professional advice (medical, legal, financial, etc.). "
+    "Use your own judgment when acting on information provided by the assistant.\n"
+    "\n"
+    "*8. Availability*\n"
+    "We aim for continuous availability but do not guarantee uninterrupted service. "
+    "Maintenance windows or outages may occur without prior notice.\n"
+    "\n"
+    "*9. Termination*\n"
+    "You may stop using Patron at any time. "
+    "We reserve the right to suspend or terminate accounts that violate these terms.\n"
+    "\n"
+    "*10. Changes to Terms*\n"
+    "We may update these terms from time to time. "
+    "Continued use of the service after changes constitutes acceptance.\n"
+    "\n"
+    "*Contact:* serhii.setti@pm.me"
+)
+
+
+async def terms(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send the terms and conditions."""
+    await update.message.reply_text(TERMS_AND_CONDITIONS, parse_mode="Markdown")
+
+
+async def contacts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send contact information."""
+    await update.message.reply_text(
+        "*Contacts*\n"
+        "\n"
+        "Email: serhii.setti@pm.me\n"
+        "Telegram: @SergeySetti\n"
+        "\n"
+        "Have a specific workflow in mind? We can integrate almost any "
+        "third\u2011party tool or service into your Patron bot \u2014 "
+        "calendars, CRMs, project trackers, you name it. "
+        "Reach out to discuss a custom integration at a special rate!",
+        parse_mode="Markdown",
+    )
+
+
 async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
     user_id = str(update.effective_user.id)
@@ -161,10 +274,24 @@ def main() -> None:
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("subscribe", subscribe))
+    application.add_handler(CommandHandler("terms", terms))
+    application.add_handler(CommandHandler("contacts", contacts))
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
     application.add_handler(
         MessageHandler(telegram.ext.filters.SUCCESSFUL_PAYMENT, successful_payment_callback)
     )
+
+    delete_memories_handler = ConversationHandler(
+        entry_points=[CommandHandler("deletememories", delete_memories_start)],
+        states={
+            CONFIRMING_DELETE_MEMORIES: [
+                CommandHandler("cancel", delete_memories_cancel),
+                MessageHandler(telegram.ext.filters.TEXT & ~telegram.ext.filters.COMMAND, delete_memories_confirm),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", delete_memories_cancel)],
+    )
+    application.add_handler(delete_memories_handler)
 
     application.add_handler(
         MessageHandler(telegram.ext.filters.TEXT, bot_participation)
