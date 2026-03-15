@@ -20,8 +20,6 @@ async def check_due_tasks(context: ContextTypes.DEFAULT_TYPE) -> None:
     tasks_repo = app_container.get(TasksRepository)
     due_tasks = tasks_repo.get_due_tasks()
 
-    logger.info(f"Checking for due tasks... Found {len(due_tasks)} due tasks")
-
     for task in due_tasks:
         task_id = task["_id"]
         user_id = task["user_id"]
