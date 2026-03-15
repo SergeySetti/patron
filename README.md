@@ -6,15 +6,15 @@ Patron is a Telegram bot that acts as a personal planning and remembering assist
 
 ## 🛠️ Tech Stack
 
-| Technology | Role |
-|---|---|
-| 🐍 **Python** >= 3.12 | Language |
-| 🦜 **LangChain** | Agentic framework |
-| ✨ **Google Gemini 3.1 Pro** | LLM |
-| 💬 **python-telegram-bot** | Telegram integration |
-| 🍃 **MongoDB** | Conversation state & user data persistence |
-| 🔍 **Qdrant** | Vector database |
-| 🐳 **Docker Compose** | Containerized deployment |
+| Technology                  | Role                                       |
+|-----------------------------|--------------------------------------------|
+| 🐍 **Python** >= 3.12       | Language                                   |
+| 🦜 **LangChain**            | Agentic framework                          |
+| ✨ **Google Gemini 3.1 Pro** | LLM                                        |
+| 💬 **python-telegram-bot**  | Telegram integration                       |
+| 🍃 **MongoDB**              | Conversation state & user data persistence |
+| 🔍 **Qdrant**               | Vector database                            |
+| 🐳 **Docker Compose**       | Containerized deployment                   |
 
 ---
 
