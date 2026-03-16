@@ -156,6 +156,36 @@ class TestTrial:
         assert repo.get_subscription_status(TEST_USER_ID) == "active"
 
 
+class TestUsername:
+
+    def test_set_and_get_username(self, repo):
+        repo.set_username(TEST_USER_ID, "johndoe")
+
+        user = repo.get(TEST_USER_ID)
+        assert user["username"] == "johndoe"
+
+    def test_set_username_none(self, repo):
+        repo.set_username(TEST_USER_ID, None)
+
+        user = repo.get(TEST_USER_ID)
+        assert user["username"] is None
+
+    def test_set_username_updates_existing(self, repo):
+        repo.set_username(TEST_USER_ID, "old_name")
+        repo.set_username(TEST_USER_ID, "new_name")
+
+        user = repo.get(TEST_USER_ID)
+        assert user["username"] == "new_name"
+
+    def test_set_username_does_not_affect_timezone(self, repo):
+        repo.set_timezone(TEST_USER_ID, "Europe/Kyiv")
+        repo.set_username(TEST_USER_ID, "johndoe")
+
+        assert repo.get_timezone(TEST_USER_ID) == "Europe/Kyiv"
+        user = repo.get(TEST_USER_ID)
+        assert user["username"] == "johndoe"
+
+
 class TestCustomPrompt:
 
     def test_get_custom_prompt_returns_none_for_new_user(self, repo):

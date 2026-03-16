@@ -37,6 +37,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     # Grant 14-day free trial for brand-new users
     users_repo = app_container.get(UsersRepository)
+    users_repo.set_username(user_id, update.effective_user.username)
     trial_expires = users_repo.start_trial(user_id)
     if trial_expires:
         trial_str = trial_expires.strftime("%Y-%m-%d %H:%M UTC")
@@ -289,6 +290,11 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     # Check subscription status — inactive users get a reminder
     users_repo = app_container.get(UsersRepository)
+
+    # Temporary start ------------------------------------------------
+    users_repo.set_username(user_id, update.effective_user.username)
+    # Temporary end --------------------------------------------------
+
     status = users_repo.get_subscription_status(user_id)
     if status != "active":
         await context.bot.send_message(

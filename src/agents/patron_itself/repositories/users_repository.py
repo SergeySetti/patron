@@ -78,6 +78,15 @@ class UsersRepository:
             {"$unset": {"custom_prompt": ""}},
         )
 
+    def set_username(self, user_id: str, username: str | None) -> None:
+        """Store the Telegram username for the user."""
+        self._collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"username": username},
+             "$setOnInsert": {"created_at": _utcnow()}},
+            upsert=True,
+        )
+
     def get_subscription_status(self, user_id: str) -> str | None:
         """Return 'active' if subscription hasn't expired, else None."""
         expires = self.get_subscription_expires_at(user_id)
