@@ -88,7 +88,9 @@ def _get_user_custom_prompt(user_id: str) -> str:
 
 def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    base = f"You are a helpful assistant. Current time: {now_utc}."
+    base = (f"You are a helpful assistant. Current time: {now_utc}."
+            f" You have access to various tools to help you assist the user, such as saving memories and managing tasks. "
+            f"For clearly factual data, save it as a memory with the appropriate keywords, so you can retrieve it later when needed. ")
 
     if user_timezone:
         tz_info = (
