@@ -67,14 +67,17 @@ def _get_user_timezone(user_id: str) -> str:
     return users_repo.get_timezone(user_id) or ""
 
 
-async def run_agent(message: str, user_id: str = None, thread_id: str = None, audio: bytes = None):
+async def run_agent(message: str, user_id: str = None, thread_id: str = None,
+                    audio: bytes = None, image: bytes = None, image_mime: str = None):
     use_checkpointer = user_id is not None and thread_id is not None
 
     if use_checkpointer:
         with MongoDBSaver.from_conn_string(MONGODB_URI, 'patron_sessions') as checkpointer:
-            return await _invoke_agent(message, user_id, thread_id, checkpointer, audio=audio)
+            return await _invoke_agent(message, user_id, thread_id, checkpointer,
+                                       audio=audio, image=image, image_mime=image_mime)
     else:
-        return await _invoke_agent(message, user_id, thread_id, audio=audio)
+        return await _invoke_agent(message, user_id, thread_id,
+                                   audio=audio, image=image, image_mime=image_mime)
 
 
 def _get_user_custom_prompt(user_id: str) -> str:
@@ -111,7 +114,8 @@ def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
     return prompt
 
 
-async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None, audio: bytes = None):
+async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None,
+                        audio: bytes = None, image: bytes = None, image_mime: str = None):
     user_timezone = _get_user_timezone(user_id) if user_id else ""
     custom_prompt = _get_user_custom_prompt(user_id) if user_id else ""
 
@@ -126,17 +130,24 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
 
     config = {"configurable": {"thread_id": thread_id}} if thread_id else None
 
+    content = []
     if audio:
-        content = [
-            {
-                "type": "media",
-                "mime_type": "audio/ogg",
-                "data": base64.b64encode(audio).decode("utf-8"),
+        content.append({
+            "type": "media",
+            "mime_type": "audio/ogg",
+            "data": base64.b64encode(audio).decode("utf-8"),
+        })
+    if image:
+        content.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{image_mime};base64,{base64.b64encode(image).decode('utf-8')}",
             },
-        ]
-        if message:
-            content.append({"type": "text", "text": message})
-    else:
+        })
+    if message:
+        content.append({"type": "text", "text": message})
+
+    if not content:
         content = message
 
     return await agent.ainvoke(

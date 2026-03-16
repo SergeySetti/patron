@@ -354,6 +354,40 @@ async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
 
 
+async def photo_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _check_subscription(update, context):
+        return
+
+    user_id = str(update.effective_user.id)
+    chat_id = str(update.message.chat_id)
+
+    # Telegram provides multiple sizes; pick the largest
+    photo = update.message.photo[-1]
+    photo_file = await context.bot.get_file(photo.file_id)
+    image_bytes = await photo_file.download_as_bytearray()
+
+    # Determine MIME type from file path (Telegram returns .jpg typically)
+    file_path = photo_file.file_path or ""
+    if file_path.endswith(".png"):
+        mime = "image/png"
+    else:
+        mime = "image/jpeg"
+
+    caption = update.message.caption or ""
+    logger.info(f"Photo from user {user_id} ({photo.width}x{photo.height}, {photo.file_size} bytes)")
+
+    response = await run_agent(caption, user_id, chat_id, image=bytes(image_bytes), image_mime=mime)
+    agent_reply = response['messages'][-1].content[-1]["text"]
+
+    logger.info(f"Agent reply: {agent_reply}")
+
+    await context.bot.send_message(
+        chat_id=update.message.chat_id,
+        reply_to_message_id=update.message.message_id,
+        text=agent_reply,
+    )
+
+
 def main() -> None:
     logger.info("Starting Telegram bot...")
     application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
@@ -393,6 +427,9 @@ def main() -> None:
 
     application.add_handler(
         MessageHandler(telegram.ext.filters.VOICE, voice_participation)
+    )
+    application.add_handler(
+        MessageHandler(telegram.ext.filters.PHOTO, photo_participation)
     )
     application.add_handler(
         MessageHandler(telegram.ext.filters.TEXT, bot_participation)
