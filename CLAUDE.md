@@ -33,20 +33,20 @@ dependencies.py (DI container via `injector`)
 
 ## Key Files
 
-| File                                                           | Purpose                                                                                                   |
-|----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `src/bot.py`                                                   | Telegram bot entry point, handlers, payment flow, job queue                                               |
-| `src/task_scheduler.py`                                        | `check_due_tasks()` — polls DB every 60s for due tasks                                                    |
-| `src/dependencies.py`                                          | DI container (`app_container`), binds Qdrant/Mongo/Vectorizer                                             |
-| `src/agents/patron_itself/patron_agent.py`                     | Agent creation, system prompt, `run_agent()`                                                              |
-| `src/agents/patron_itself/repositories/tasks_repository.py`    | MongoDB: `patron_tasks.tasks`                                                                             |
-| `src/agents/patron_itself/repositories/users_repository.py`    | MongoDB: `patron_users.users` (timezone, subscription)                                                    |
-| `src/agents/patron_itself/repositories/transactions_repository.py` | MongoDB: `patron_users.transactions` (payment records)                                                |
-| `src/agents/patron_itself/repositories/memories_repository.py` | Qdrant: `memories` collection (768-dim cosine)                                                            |
-| `src/agents/patron_itself/tools/task_tools.py`                 | `create_task`, `list_tasks`, `delete_task`                                                                |
-| `src/agents/patron_itself/tools/user_tools.py`                 | `get_user_timezone`, `set_user_timezone`                                                                  |
-| `src/agents/patron_itself/tools/memory_tools.py`               | `add_memory`, `recall_memories_by_semantic_query`, `recall_memories_by_time_constraints`, `delete_memory` |
-| `src/services/vectorisation/VectorizerGemini.py`               | Google Gemini embedding wrapper                                                                           |
+| File                                                               | Purpose                                                                                                   |
+|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `src/bot.py`                                                       | Telegram bot entry point, handlers, payment flow, job queue                                               |
+| `src/task_scheduler.py`                                            | `check_due_tasks()` — polls DB every 60s for due tasks                                                    |
+| `src/dependencies.py`                                              | DI container (`app_container`), binds Qdrant/Mongo/Vectorizer                                             |
+| `src/agents/patron_itself/patron_agent.py`                         | Agent creation, system prompt, `run_agent()`                                                              |
+| `src/agents/patron_itself/repositories/tasks_repository.py`        | MongoDB: `patron_tasks.tasks`                                                                             |
+| `src/agents/patron_itself/repositories/users_repository.py`        | MongoDB: `patron_users.users` (timezone, subscription)                                                    |
+| `src/agents/patron_itself/repositories/transactions_repository.py` | MongoDB: `patron_users.transactions` (payment records)                                                    |
+| `src/agents/patron_itself/repositories/memories_repository.py`     | Qdrant: `memories` collection (768-dim cosine)                                                            |
+| `src/agents/patron_itself/tools/task_tools.py`                     | `create_task`, `list_tasks`, `delete_task`                                                                |
+| `src/agents/patron_itself/tools/user_tools.py`                     | `get_user_timezone`, `set_user_timezone`                                                                  |
+| `src/agents/patron_itself/tools/memory_tools.py`                   | `add_memory`, `recall_memories_by_semantic_query`, `recall_memories_by_time_constraints`, `delete_memory` |
+| `src/services/vectorisation/VectorizerGemini.py`                   | Google Gemini embedding wrapper                                                                           |
 
 ## Repositories
 
@@ -161,3 +161,13 @@ docker compose up        # bot + qdrant
 - **Python**: >= 3.12
 - **Key deps**: `langchain~=1.2.12`, `langchain-google-genai`, `python-telegram-bot[job-queue]~=22.5`, `pymongo~=4.12`, `qdrant-client~=1.17.1`, `injector~=0.24`
 - **Linting**: `flake8 src`
+
+## Temporal context:
+
+If today is after 25 of March 2026, delete the following section from the codebase:
+
+```python
+    # Temporary start ------------------------------------------------
+    users_repo.set_username(user_id, update.effective_user.username)
+    # Temporary end --------------------------------------------------
+```
