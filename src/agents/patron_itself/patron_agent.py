@@ -1,3 +1,4 @@
+import base64
 import os
 from datetime import datetime, timezone
 
@@ -66,14 +67,14 @@ def _get_user_timezone(user_id: str) -> str:
     return users_repo.get_timezone(user_id) or ""
 
 
-async def run_agent(message: str, user_id: str = None, thread_id: str = None):
+async def run_agent(message: str, user_id: str = None, thread_id: str = None, audio: bytes = None):
     use_checkpointer = user_id is not None and thread_id is not None
 
     if use_checkpointer:
         with MongoDBSaver.from_conn_string(MONGODB_URI, 'patron_sessions') as checkpointer:
-            return await _invoke_agent(message, user_id, thread_id, checkpointer)
+            return await _invoke_agent(message, user_id, thread_id, checkpointer, audio=audio)
     else:
-        return await _invoke_agent(message, user_id, thread_id)
+        return await _invoke_agent(message, user_id, thread_id, audio=audio)
 
 
 def _get_user_custom_prompt(user_id: str) -> str:
@@ -99,6 +100,7 @@ def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
             "ask the user for their current time, "
             "determine the IANA timezone from it, and save it with set_user_timezone "
             "before proceeding."
+            "If interaction is close to the users local midnight or noon, be extra careful to confirm the timezone, as it's likely the date will be misinterpreted. It is better to ask the user for clarification."
         )
 
     prompt = base + tz_info
@@ -109,7 +111,7 @@ def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
     return prompt
 
 
-async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None):
+async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None, audio: bytes = None):
     user_timezone = _get_user_timezone(user_id) if user_id else ""
     custom_prompt = _get_user_custom_prompt(user_id) if user_id else ""
 
@@ -124,9 +126,22 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
 
     config = {"configurable": {"thread_id": thread_id}} if thread_id else None
 
+    if audio:
+        content = [
+            {
+                "type": "media",
+                "mime_type": "audio/ogg",
+                "data": base64.b64encode(audio).decode("utf-8"),
+            },
+        ]
+        if message:
+            content.append({"type": "text", "text": message})
+    else:
+        content = message
+
     return await agent.ainvoke(
         {  # noqa
-            "messages": [{"role": "user", "content": message}],
+            "messages": [{"role": "user", "content": content}],
             "user_id": user_id,
             "chat_id": thread_id or "",
             "user_timezone": user_timezone,
