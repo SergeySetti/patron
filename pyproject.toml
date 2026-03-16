@@ -23,6 +23,7 @@ dependencies = [
     "qdrant-client~=1.17.1",
     "pymongo~=4.15.5",
     "mongomock~=4.3",
+    "croniter~=6.2",
 ]
 
 [tool.setuptools.packages.find]
