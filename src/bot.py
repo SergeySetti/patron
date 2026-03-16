@@ -283,12 +283,9 @@ async def custom_prompt_cancel(update: Update, context: ContextTypes.DEFAULT_TYP
     return ConversationHandler.END
 
 
-async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_message = update.message.text
+async def _check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Check subscription status. Returns True if active, sends reminder otherwise."""
     user_id = str(update.effective_user.id)
-    chat_id = str(update.message.chat_id)
-
-    # Check subscription status — inactive users get a reminder
     users_repo = app_container.get(UsersRepository)
 
     # Temporary start ------------------------------------------------
@@ -305,11 +302,47 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 "Please use /subscribe to continue using Patron."
             ),
         )
+        return False
+    return True
+
+
+async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _check_subscription(update, context):
         return
+
+    user_message = update.message.text
+    user_id = str(update.effective_user.id)
+    chat_id = str(update.message.chat_id)
 
     logger.info(f"User message: {user_message}")
 
     response = await run_agent(user_message, user_id, chat_id)
+    agent_reply = response['messages'][-1].content[-1]["text"]
+
+    logger.info(f"Agent reply: {agent_reply}")
+
+    await context.bot.send_message(
+        chat_id=update.message.chat_id,
+        reply_to_message_id=update.message.message_id,
+        text=agent_reply,
+    )
+
+
+async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _check_subscription(update, context):
+        return
+
+    user_id = str(update.effective_user.id)
+    chat_id = str(update.message.chat_id)
+
+    voice = update.message.voice
+    voice_file = await context.bot.get_file(voice.file_id)
+    audio_bytes = await voice_file.download_as_bytearray()
+
+    caption = update.message.caption or ""
+    logger.info(f"Voice message from user {user_id} ({voice.duration}s, {voice.file_size} bytes)")
+
+    response = await run_agent(caption, user_id, chat_id, audio=bytes(audio_bytes))
     agent_reply = response['messages'][-1].content[-1]["text"]
 
     logger.info(f"Agent reply: {agent_reply}")
@@ -358,6 +391,9 @@ def main() -> None:
     )
     application.add_handler(custom_prompt_handler)
 
+    application.add_handler(
+        MessageHandler(telegram.ext.filters.VOICE, voice_participation)
+    )
     application.add_handler(
         MessageHandler(telegram.ext.filters.TEXT, bot_participation)
     )
