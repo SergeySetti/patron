@@ -43,7 +43,7 @@ dependencies.py (DI container via `injector`)
 | `src/agents/patron_itself/repositories/users_repository.py`        | MongoDB: `patron_users.users` (timezone, subscription)                                                    |
 | `src/agents/patron_itself/repositories/transactions_repository.py` | MongoDB: `patron_users.transactions` (payment records)                                                    |
 | `src/agents/patron_itself/repositories/memories_repository.py`     | Qdrant: `memories` collection (768-dim cosine)                                                            |
-| `src/agents/patron_itself/tools/task_tools.py`                     | `create_task`, `list_tasks`, `delete_task`                                                                |
+| `src/agents/patron_itself/tools/task_tools.py`                     | `create_task`, `update_task`, `list_tasks`, `delete_task`                                                                |
 | `src/agents/patron_itself/tools/user_tools.py`                     | `get_user_timezone`, `set_user_timezone`                                                                  |
 | `src/agents/patron_itself/tools/memory_tools.py`                   | `add_memory`, `recall_memories_by_semantic_query`, `recall_memories_by_time_constraints`, `delete_memory` |
 | `src/services/vectorisation/VectorizerGemini.py`                   | Google Gemini embedding wrapper                                                                           |
@@ -51,12 +51,16 @@ dependencies.py (DI container via `injector`)
 ## Repositories
 
 ### TasksRepository (MongoDB: `patron_tasks.tasks`)
-- `create(user_id, chat_id, text, due_at)` → task_id (UUID)
+- `create(user_id, chat_id, text, due_at, recurrence=None, special_instructions_for_agent=None)` → task_id (UUID)
+- `update(task_id, text=None, due_at=None, recurrence=_NOT_PROVIDED, special_instructions_for_agent=_NOT_PROVIDED)` → bool (found). Pass `None` for recurrence/instructions to remove them.
 - `get_due_tasks(now)` → pending tasks where `due_at <= now`
 - `mark_completed(task_id)` — sets status + completed_at
+- `reschedule(task_id)` → advances a recurring task to next cron occurrence, returns new due_at (or None if not recurring)
 - `get_tasks_for_user(user_id, status=None)`
-- `delete(task_id)` → bool
+- `delete(task_id)` → bool (also stops recurring tasks)
 - Indexes: `user_id`, `(due_at, status)`
+- **Recurrence**: optional `recurrence` field stores a cron expression (e.g. `"0 9 * * *"`). Validated via `croniter` on create/update. Minimum interval: 1 hour. Scheduler calls `reschedule()` instead of `mark_completed()` for recurring tasks.
+- **Special instructions**: optional `special_instructions_for_agent` field — agent-facing instructions for *how* to handle the task (tone, format, context). Appended to the scheduler prompt when the task fires.
 
 ### UsersRepository (MongoDB: `patron_users.users`)
 - `get(user_id)` → full user doc or None
@@ -131,7 +135,7 @@ docker compose up qdrant -d             # start Qdrant for repository tests
 
 - **conftest.py**: in-memory Qdrant (`:memory:`), `mongomock`, mocked vectorizer (deterministic 768-dim vectors)
 - Agent tests (`test_patron_agent.py`) are **skipped** — require real Gemini API
-- 61 tests passing, 2 skipped
+- 122 tests passing, 2 skipped
 
 ## Docker
 
@@ -159,7 +163,7 @@ docker compose up        # bot + qdrant
 
 - **Version**: 2.0.1 (`pyproject.toml`)
 - **Python**: >= 3.12
-- **Key deps**: `langchain~=1.2.12`, `langchain-google-genai`, `python-telegram-bot[job-queue]~=22.5`, `pymongo~=4.12`, `qdrant-client~=1.17.1`, `injector~=0.24`
+- **Key deps**: `langchain~=1.2.12`, `langchain-google-genai`, `python-telegram-bot[job-queue]~=22.5`, `pymongo~=4.15.5`, `qdrant-client~=1.17.1`, `injector~=0.24`, `croniter~=6.2`
 - **Linting**: `flake8 src`
 
 ## Temporal context:

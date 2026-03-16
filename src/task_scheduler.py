@@ -16,6 +16,9 @@ async def check_due_tasks(context: ContextTypes.DEFAULT_TYPE) -> None:
 
     Finds all pending tasks whose due_at has passed, runs the agent for
     each one, and sends the result to the user's chat.
+
+    Recurring tasks are rescheduled to their next occurrence;
+    one-off tasks are marked completed.
     """
     tasks_repo = app_container.get(TasksRepository)
     due_tasks = tasks_repo.get_due_tasks()
@@ -25,17 +28,33 @@ async def check_due_tasks(context: ContextTypes.DEFAULT_TYPE) -> None:
         user_id = task["user_id"]
         chat_id = task["chat_id"]
         task_text = task["text"]
+        is_recurring = "recurrence" in task
+        special_instructions = task.get("special_instructions_for_agent")
 
         logger.info(f"Executing due task {task_id} for user {user_id}: {task_text}")
 
         try:
-            tasks_repo.mark_completed(task_id)
+            # Advance state before agent call so the task won't fire
+            # again if the agent takes longer than one scheduler tick.
+            if is_recurring:
+                next_due = tasks_repo.reschedule(task_id)
+                logger.info(
+                    f"Recurring task {task_id} rescheduled to {next_due.isoformat()}"
+                )
+            else:
+                tasks_repo.mark_completed(task_id)
 
             prompt = (
                 f"The following scheduled task is now due. "
                 f"Read it, decide what to do or answer, and respond accordingly:\n\n"
                 f"{task_text}"
             )
+            if special_instructions:
+                prompt += (
+                    f"\n\nSpecial instructions for handling this task:\n"
+                    f"{special_instructions}"
+                )
+
             response = await run_agent(prompt, user_id, chat_id)
             if not response or "messages" not in response or not response["messages"]:
                 logger.warning(f"No valid response from agent for task {task_id}")
