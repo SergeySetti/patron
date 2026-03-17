@@ -21,7 +21,7 @@ bot.py (Telegram entry point)
 
 patron_agent.py (Agent orchestration)
   ├── CustomAgentState: user_id, chat_id, preferences, user_timezone
-  ├── System prompt: includes current UTC time + user timezone context
+  ├── System prompt: loaded from prompts/*.md templates
   ├── Tools: memory, task, user, get_weather (mock)
   └── Checkpointer: MongoDBSaver (multi-turn conversations)
 
@@ -38,7 +38,10 @@ dependencies.py (DI container via `injector`)
 | `src/bot.py`                                                       | Telegram bot entry point, handlers, payment flow, job queue. Logs include `@username`.                    |
 | `src/task_scheduler.py`                                            | `check_due_tasks()` — polls DB every 60s for due tasks                                                    |
 | `src/dependencies.py`                                              | DI container (`app_container`), binds Qdrant/Mongo/Vectorizer                                             |
-| `src/agents/patron_itself/patron_agent.py`                         | Agent creation, system prompt, `run_agent()`                                                              |
+| `src/agents/patron_itself/patron_agent.py`                         | Agent creation, `run_agent()`, loads system prompt from `.md` templates                                   |
+| `src/agents/patron_itself/prompts/system_prompt.md`                | Main system prompt template (variables: `{current_time}`, `{timezone_block}`, `{custom_prompt_block}`)    |
+| `src/agents/patron_itself/prompts/timezone_known.md`               | Timezone block when user's timezone is set (variable: `{user_timezone}`)                                  |
+| `src/agents/patron_itself/prompts/timezone_unknown.md`             | Timezone block when timezone is unknown — instructs agent to ask                                          |
 | `src/agents/patron_itself/repositories/tasks_repository.py`        | MongoDB: `patron_tasks.tasks`                                                                             |
 | `src/agents/patron_itself/repositories/users_repository.py`        | MongoDB: `patron_users.users` (timezone, subscription)                                                    |
 | `src/agents/patron_itself/repositories/transactions_repository.py` | MongoDB: `patron_users.transactions` (payment records)                                                    |
@@ -88,9 +91,9 @@ dependencies.py (DI container via `injector`)
 ## Timezone Flow
 
 1. `_invoke_agent()` calls `_get_user_timezone(user_id)` → reads from UsersRepository
-2. `_build_system_prompt(user_timezone)` injects current UTC time + timezone instructions
-3. If timezone is unknown → system prompt tells agent to ask user for current time, determine IANA timezone, and call `set_user_timezone`
-4. If timezone is known → system prompt tells agent to use it when converting relative times to UTC for tasks
+2. `_build_system_prompt(user_timezone)` loads `prompts/system_prompt.md` and injects the appropriate timezone block
+3. If timezone is unknown → loads `timezone_unknown.md` — instructs agent to ask user for current time, determine IANA timezone, and call `set_user_timezone`
+4. If timezone is known → loads `timezone_known.md` — instructs agent to use it when converting relative times to UTC for tasks
 
 ## Payments & Subscription
 
@@ -115,16 +118,20 @@ dependencies.py (DI container via `injector`)
 
 ## Local Development
 
-**Always use the project venv** for running Python, tests, and scripts:
+**Always use the project venv** for running Python, tests, and scripts.
 
+When running Python commands, always use the venv interpreter directly:
 ```bash
-# Activate venv first (Windows)
-venv\Scripts\activate
-# or on Linux/macOS
-source venv/bin/activate
+# Windows
+venv/Scripts/python.exe -m pytest ...
+venv/Scripts/python.exe src/bot.py
+
+# Linux/macOS
+venv/bin/python -m pytest ...
+venv/bin/python src/bot.py
 ```
 
-All commands below assume the venv is active.
+Do **not** rely on `python` being on PATH — always invoke `venv/Scripts/python.exe` (Windows) or `venv/bin/python` (Linux/macOS) explicitly.
 
 ## Testing
 

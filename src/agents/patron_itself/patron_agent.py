@@ -1,6 +1,7 @@
 import base64
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent, AgentState
@@ -86,34 +87,28 @@ def _get_user_custom_prompt(user_id: str) -> str:
     return users_repo.get_custom_prompt(user_id) or ""
 
 
+_PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+
+def _load_prompt(name: str) -> str:
+    return (_PROMPTS_DIR / name).read_text(encoding="utf-8")
+
+
 def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    base = (f"You are a helpful assistant. Current time: {now_utc}."
-            f" You have access to various tools to help you assist the user, such as saving memories and managing tasks. "
-            f"For clearly factual data, save it as a memory with the appropriate keywords, so you can retrieve it later when needed. ")
 
     if user_timezone:
-        tz_info = (
-            f" The user's timezone is {user_timezone}. "
-            "Always convert relative times (e.g. 'tomorrow at 9am') to UTC "
-            "using this timezone when creating tasks."
-        )
+        timezone_block = _load_prompt("timezone_known.md").format(user_timezone=user_timezone)
     else:
-        tz_info = (
-            " You do not know the user's timezone yet. "
-            "When the user asks to schedule a task or anything time-related, "
-            "ask the user for their current time, "
-            "determine the IANA timezone from it, and save it with set_user_timezone "
-            "before proceeding."
-            "If interaction is close to the users local midnight or noon, be extra careful to confirm the timezone, as it's likely the date will be misinterpreted. It is better to ask the user for clarification."
-        )
+        timezone_block = _load_prompt("timezone_unknown.md")
 
-    prompt = base + tz_info
+    custom_prompt_block = f"User instructions:\n{custom_prompt}" if custom_prompt else ""
 
-    if custom_prompt:
-        prompt += f"\n\nUser instructions:\n{custom_prompt}"
-
-    return prompt
+    return _load_prompt("system_prompt.md").format(
+        current_time=now_utc,
+        timezone_block=timezone_block,
+        custom_prompt_block=custom_prompt_block,
+    ).rstrip()
 
 
 async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None,
