@@ -314,7 +314,8 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_id = str(update.effective_user.id)
     chat_id = str(update.message.chat_id)
 
-    logger.info(f"User message: {user_message}")
+    username = update.effective_user.username
+    logger.info(f"User message from @{username}: {user_message}")
 
     response = await run_agent(user_message, user_id, chat_id)
     agent_reply = response['messages'][-1].content[-1]["text"]

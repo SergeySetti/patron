@@ -16,7 +16,7 @@ bot.py (Telegram entry point)
   ├── /subscribe handler → Telegram Stars invoice
   ├── PreCheckoutQueryHandler → approve payment
   ├── SUCCESSFUL_PAYMENT handler → record transaction + extend subscription
-  ├── message handler → subscription check → run_agent()
+  ├── message handler → subscription check → log @username → run_agent()
   └── job queue (60s) → check_due_tasks() → run_agent() (no subscription check)
 
 patron_agent.py (Agent orchestration)
@@ -35,7 +35,7 @@ dependencies.py (DI container via `injector`)
 
 | File                                                               | Purpose                                                                                                   |
 |--------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `src/bot.py`                                                       | Telegram bot entry point, handlers, payment flow, job queue                                               |
+| `src/bot.py`                                                       | Telegram bot entry point, handlers, payment flow, job queue. Logs include `@username`.                    |
 | `src/task_scheduler.py`                                            | `check_due_tasks()` — polls DB every 60s for due tasks                                                    |
 | `src/dependencies.py`                                              | DI container (`app_container`), binds Qdrant/Mongo/Vectorizer                                             |
 | `src/agents/patron_itself/patron_agent.py`                         | Agent creation, system prompt, `run_agent()`                                                              |
@@ -47,6 +47,7 @@ dependencies.py (DI container via `injector`)
 | `src/agents/patron_itself/tools/user_tools.py`                     | `get_user_timezone`, `set_user_timezone`                                                                  |
 | `src/agents/patron_itself/tools/memory_tools.py`                   | `add_memory`, `recall_memories_by_semantic_query`, `recall_memories_by_time_constraints`, `delete_memory` |
 | `src/services/vectorisation/VectorizerGemini.py`                   | Google Gemini embedding wrapper                                                                           |
+| `scripts/list_sessions.py`                                         | CLI tool to list and decode past conversation sessions from MongoDB                                       |
 
 ## Repositories
 

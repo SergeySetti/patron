@@ -12,8 +12,9 @@ dependencies = [
     "langchain~=1.2.12",
     "langchain-google-genai",
     "psycopg[binary]~=3.3.3",
+    "pymongo~=4.15.5",
     "langgraph-checkpoint-mongodb~=0.3.1",
-    "python-telegram-bot[job-queue]~=22.5",
+    "python-telegram-bot[job-queue]~=22.7",
     "python-dotenv~=1.2",
     "pytest",
     "pytest-asyncio",
@@ -21,7 +22,6 @@ dependencies = [
     "injector~=0.24",
     "requests",
     "qdrant-client~=1.17.1",
-    "pymongo~=4.15.5",
     "mongomock~=4.3",
     "croniter~=6.2",
 ]
