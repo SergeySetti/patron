@@ -307,6 +307,9 @@ async def _check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None:
+        return
+
     if not await _check_subscription(update, context):
         return
 
