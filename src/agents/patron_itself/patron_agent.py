@@ -3,11 +3,10 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from anthropic import Anthropic
 from dotenv import load_dotenv
 from langchain.agents import create_agent, AgentState
+from langchain.agents.middleware import ModelFallbackMiddleware
 from langchain.chat_models import init_chat_model
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from langgraph.graph.state import CompiledStateGraph
 
@@ -30,8 +29,10 @@ class CustomAgentState(AgentState):
     user_timezone: str
 
 
-# model = ChatGoogleGenerativeAI(model="gemini-3.1-pro-preview")
-model = init_chat_model("claude-opus-4-6")
+CLAUDE = "claude-opus-4-6"
+GEMINI = "gemini-3.1-pro-preview"
+
+model = init_chat_model(CLAUDE)
 
 DB_URI = os.getenv("ASSISTANT_SESSIONS_DATABASE_URL")
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -125,7 +126,10 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
         system_prompt=_build_system_prompt(user_timezone, custom_prompt),
-        middleware=[ToolLoggingMiddleware()],
+        middleware=[
+            ToolLoggingMiddleware(),
+            ModelFallbackMiddleware(GEMINI)
+        ],
     )
 
     config = {"configurable": {"thread_id": thread_id}} if thread_id else None

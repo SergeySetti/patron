@@ -60,7 +60,8 @@ async def check_due_tasks(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.warning(f"No valid response from agent for task {task_id}")
                 logger.warning(f"Response content: {response}")
                 continue
-            agent_reply = response["messages"][-1].content[-1]["text"]
+
+            agent_reply = response["messages"][-1].text
 
             await context.bot.send_message(chat_id=int(chat_id), text=agent_reply)
             logger.info(f"Task {task_id} executed and user notified")

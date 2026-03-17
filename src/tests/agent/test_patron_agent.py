@@ -1,3 +1,4 @@
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch, MagicMock
 
@@ -22,18 +23,20 @@ async def test_real_agent_response():
 
 
 @pytest.mark.asyncio
-@skip("This test requires real API calls and external service connections. Uncomment to run.")
+# @skip("This test requires real API calls and external service connections. Uncomment to run.")
 @patch("src.agents.patron_itself.patron_agent.MongoDBSaver")
 async def test_agent_with_checkpointer(mock_mongo_saver):
     in_memory_checkpointer = InMemorySaver()
     mock_mongo_saver.from_conn_string.return_value.__enter__ = MagicMock(return_value=in_memory_checkpointer)
     mock_mongo_saver.from_conn_string.return_value.__exit__ = MagicMock(return_value=False)
 
-    user_ask = "What is the weather in New York?"
+    user_ask = "I bet you can't tell me a joke and save the conversation state in the checkpointer at the same time!"
 
     response = await run_agent(user_ask, 'user1', 'session1')
 
-    messages = response['messages']
-    print(messages[-1].content[-1]["text"])
+    pprint(response)
+
+    message_text = response["messages"][-1].text
+    print(message_text)
 
     mock_mongo_saver.from_conn_string.assert_called_once()
