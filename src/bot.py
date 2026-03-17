@@ -321,7 +321,7 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     logger.info(f"User message from @{username}: {user_message}")
 
     response = await run_agent(user_message, user_id, chat_id)
-    agent_reply = response['messages'][-1].content[-1]["text"]
+    agent_reply = response['messages'][-1].text
 
     logger.info(f"Agent reply: {agent_reply}")
 
@@ -347,7 +347,7 @@ async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(f"Voice message from user {user_id} ({voice.duration}s, {voice.file_size} bytes)")
 
     response = await run_agent(caption, user_id, chat_id, audio=bytes(audio_bytes))
-    agent_reply = response['messages'][-1].content[-1]["text"]
+    agent_reply = response['messages'][-1].text
 
     logger.info(f"Agent reply: {agent_reply}")
 
@@ -381,7 +381,7 @@ async def photo_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(f"Photo from user {user_id} ({photo.width}x{photo.height}, {photo.file_size} bytes)")
 
     response = await run_agent(caption, user_id, chat_id, image=bytes(image_bytes), image_mime=mime)
-    agent_reply = response['messages'][-1].content[-1]["text"]
+    agent_reply = response['messages'][-1].text
 
     logger.info(f"Agent reply: {agent_reply}")
 

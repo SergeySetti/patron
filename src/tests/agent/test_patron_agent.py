@@ -18,7 +18,7 @@ async def test_real_agent_response():
 
     messages = response['messages']
     print(
-        messages[-1].content[-1]["text"]
+        messages[-1].text
     )  # Print the last message content for inspection
 
 
