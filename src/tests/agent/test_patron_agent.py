@@ -23,7 +23,7 @@ async def test_real_agent_response():
 
 
 @pytest.mark.asyncio
-# @skip("This test requires real API calls and external service connections. Uncomment to run.")
+@skip("This test requires real API calls and external service connections. Uncomment to run.")
 @patch("src.agents.patron_itself.patron_agent.MongoDBSaver")
 async def test_agent_with_checkpointer(mock_mongo_saver):
     in_memory_checkpointer = InMemorySaver()

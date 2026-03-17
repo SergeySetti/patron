@@ -29,8 +29,8 @@ class CustomAgentState(AgentState):
     user_timezone: str
 
 
-CLAUDE = "claude-opus-4-6"
-GEMINI = "gemini-3.1-pro-preview"
+CLAUDE = "anthropic:claude-opus-4-6"
+GEMINI = "google_genai:gemini-3.1-pro-preview"
 
 model = init_chat_model(CLAUDE)
 
