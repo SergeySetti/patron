@@ -11,6 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     "langchain~=1.2.12",
     "langchain-google-genai",
+    "langchain-anthropic",
     "psycopg[binary]~=3.3.3",
     "pymongo~=4.15.5",
     "langgraph-checkpoint-mongodb~=0.3.1",
