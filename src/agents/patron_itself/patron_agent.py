@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent, AgentState
-from langchain.agents.middleware import ModelFallbackMiddleware, SummarizationMiddleware
+from langchain.agents.middleware import SummarizationMiddleware
 from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from langgraph.graph.state import CompiledStateGraph

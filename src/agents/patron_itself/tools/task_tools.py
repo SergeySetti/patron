@@ -130,8 +130,7 @@ def create_task_tools(repo: TasksRepository) -> list:
                 "status": t["status"],
                 **({"recurrence": t["recurrence"]}
                    if "recurrence" in t else {}),
-                **({"special_instructions_for_agent":
-                        t["special_instructions_for_agent"]}
+                **({"special_instructions_for_agent": t["special_instructions_for_agent"]}
                    if "special_instructions_for_agent" in t else {}),
             }
             for t in tasks

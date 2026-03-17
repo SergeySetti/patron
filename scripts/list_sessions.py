@@ -9,7 +9,6 @@ Usage:
 import argparse
 import os
 import sys
-from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from langgraph.checkpoint.mongodb import MongoDBSaver
@@ -61,7 +60,7 @@ def print_session(saver, thread_id, usernames, verbose=False):
     config = {"configurable": {"thread_id": thread_id}}
     cp_tuple = saver.get_tuple(config)
     if not cp_tuple:
-        print(f"  (no checkpoint found)")
+        print("  (no checkpoint found)")
         return
 
     cp = cp_tuple.checkpoint

@@ -154,7 +154,7 @@ class TestRecurrence:
 
     def test_create_with_hourly_allowed(self, repo):
         due = datetime(2025, 6, 1, tzinfo=timezone.utc)
-        task_id = repo.create(
+        repo.create(
             TEST_USER_ID, TEST_CHAT_ID, "Hourly",
             due, recurrence="0 * * * *",
         )
@@ -379,7 +379,7 @@ class TestSpecialInstructions:
 
     def test_create_with_special_instructions(self, repo):
         due = datetime(2025, 6, 1, tzinfo=timezone.utc)
-        task_id = repo.create(
+        repo.create(
             TEST_USER_ID, TEST_CHAT_ID, "Morning checklist", due,
             special_instructions_for_agent="Reply in bullet points, motivational tone",
         )

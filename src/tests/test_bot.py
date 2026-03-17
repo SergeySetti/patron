@@ -1,12 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from src.bot import start, bot_participation
 
 
 @pytest.mark.asyncio
 @patch("src.bot.app_container")
 async def test_start_grants_trial_for_new_user(mock_container):
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timezone
     mock_users_repo = MagicMock()
     trial_expires = datetime(2025, 7, 1, tzinfo=timezone.utc)
     mock_users_repo.start_trial.return_value = trial_expires
@@ -59,7 +61,7 @@ async def test_bot_participation(mock_run_agent, mock_container):
 
     agent_response_text = "It's always sunny in New York!"
     mock_message = MagicMock()
-    mock_message.content = [{"text": agent_response_text}]
+    mock_message.text = agent_response_text
     mock_run_agent.return_value = {
         'messages': [mock_message]
     }
