@@ -32,7 +32,10 @@ class CustomAgentState(AgentState):
 CLAUDE = "anthropic:claude-opus-4-6"
 GEMINI = "google_genai:gemini-3.1-pro-preview"
 
-model = init_chat_model(CLAUDE)
+PRIMARY_MODEL = GEMINI
+SECONDARY_MODEL = CLAUDE
+
+model = init_chat_model(PRIMARY_MODEL)
 
 DB_URI = os.getenv("ASSISTANT_SESSIONS_DATABASE_URL")
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -128,9 +131,9 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         system_prompt=_build_system_prompt(user_timezone, custom_prompt),
         middleware=[
             ToolLoggingMiddleware(),
-            ModelFallbackMiddleware(GEMINI),
+            # ModelFallbackMiddleware(GEMINI),
             SummarizationMiddleware(
-                model=GEMINI,
+                model=PRIMARY_MODEL,
                 trigger=("tokens", 10000),  # noqa
                 keep=("messages", 100),  # noqa
             )
