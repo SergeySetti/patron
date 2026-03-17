@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent, AgentState
-from langchain.agents.middleware import ModelFallbackMiddleware
+from langchain.agents.middleware import ModelFallbackMiddleware, SummarizationMiddleware
 from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from langgraph.graph.state import CompiledStateGraph
@@ -128,7 +128,12 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         system_prompt=_build_system_prompt(user_timezone, custom_prompt),
         middleware=[
             ToolLoggingMiddleware(),
-            ModelFallbackMiddleware(GEMINI)
+            ModelFallbackMiddleware(GEMINI),
+            SummarizationMiddleware(
+                model=GEMINI,
+                trigger=("tokens", 10000),  # noqa
+                keep=("messages", 100),  # noqa
+            )
         ],
     )
 
