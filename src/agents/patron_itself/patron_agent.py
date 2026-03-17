@@ -30,8 +30,8 @@ class CustomAgentState(AgentState):
     user_timezone: str
 
 
-model = ChatGoogleGenerativeAI(model="gemini-3.1-pro-preview")
-# model = init_chat_model("claude-opus-4-6")
+# model = ChatGoogleGenerativeAI(model="gemini-3.1-pro-preview")
+model = init_chat_model("claude-opus-4-6")
 
 DB_URI = os.getenv("ASSISTANT_SESSIONS_DATABASE_URL")
 MONGODB_URI = os.getenv("MONGODB_URI")
