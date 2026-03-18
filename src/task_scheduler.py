@@ -4,7 +4,7 @@ import logging
 
 from telegram.ext import ContextTypes
 
-from agents.patron_itself.patron_agent import run_agent
+from agents.patron_itself.patron_agent import run_agent, GEMINI_FLASH_LIGHT
 from agents.patron_itself.repositories.tasks_repository import TasksRepository
 from dependencies import app_container, AssistantLogger
 
@@ -55,7 +55,7 @@ async def check_due_tasks(context: ContextTypes.DEFAULT_TYPE) -> None:
                     f"{special_instructions}"
                 )
 
-            response = await run_agent(prompt, user_id, chat_id)
+            response = await run_agent(prompt, user_id, chat_id, model_override=GEMINI_FLASH_LIGHT)
             if not response or "messages" not in response or not response["messages"]:
                 logger.warning(f"No valid response from agent for task {task_id}")
                 logger.warning(f"Response content: {response}")

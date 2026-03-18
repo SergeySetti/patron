@@ -30,9 +30,10 @@ class CustomAgentState(AgentState):
 
 
 CLAUDE = "anthropic:claude-opus-4-6"
-GEMINI = "google_genai:gemini-3.1-pro-preview"
+GEMINI_PRO = "google_genai:gemini-3.1-pro-preview"
+GEMINI_FLASH_LIGHT = "google_genai:gemini-3.1-flash-lite-preview"
 
-PRIMARY_MODEL = GEMINI
+PRIMARY_MODEL = GEMINI_PRO
 SECONDARY_MODEL = CLAUDE
 
 model = init_chat_model(PRIMARY_MODEL)
@@ -76,16 +77,19 @@ def _get_user_timezone(user_id: str) -> str:
 
 
 async def run_agent(message: str, user_id: str = None, thread_id: str = None,
-                    audio: bytes = None, image: bytes = None, image_mime: str = None):
+                    audio: bytes = None, image: bytes = None, image_mime: str = None,
+                    model_override: str = None):
     use_checkpointer = user_id is not None and thread_id is not None
 
     if use_checkpointer:
         with MongoDBSaver.from_conn_string(MONGODB_URI, 'patron_sessions') as checkpointer:
             return await _invoke_agent(message, user_id, thread_id, checkpointer,
-                                       audio=audio, image=image, image_mime=image_mime)
+                                       audio=audio, image=image, image_mime=image_mime,
+                                       model_override=model_override)
     else:
         return await _invoke_agent(message, user_id, thread_id,
-                                   audio=audio, image=image, image_mime=image_mime)
+                                   audio=audio, image=image, image_mime=image_mime,
+                                   model_override=model_override)
 
 
 def _get_user_custom_prompt(user_id: str) -> str:
@@ -119,12 +123,15 @@ def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
 
 
 async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None,
-                        audio: bytes = None, image: bytes = None, image_mime: str = None):
+                        audio: bytes = None, image: bytes = None, image_mime: str = None,
+                        model_override: str = None):
     user_timezone = _get_user_timezone(user_id) if user_id else ""
     custom_prompt = _get_user_custom_prompt(user_id) if user_id else ""
 
+    effective_model = init_chat_model(model_override) if model_override else model
+
     agent: CompiledStateGraph = create_agent(
-        model=model,
+        model=effective_model,
         tools=[*_get_memory_tools(), *_get_task_tools(), *_get_user_tools()],
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
