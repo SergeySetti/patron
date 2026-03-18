@@ -1,26 +1,49 @@
-from pprint import pprint
+import asyncio
 from unittest.mock import patch, MagicMock
 
-import pytest
+import nest_asyncio
+import mlflow
 from langgraph.checkpoint.memory import InMemorySaver
+from mlflow.genai.scorers import Correctness
 
 from agents.patron_itself.patron_agent import run_agent
 
+nest_asyncio.apply()
 
-@pytest.mark.asyncio
+
 @patch("src.agents.patron_itself.patron_agent.MongoDBSaver")
-async def test_agent_with_checkpointer(mock_mongo_saver):
+def test_agent_with_checkpointer(mock_mongo_saver):
+    mlflow.autolog(disable=True)
+    mlflow.set_tracking_uri("http://localhost:5000")
+
     in_memory_checkpointer = InMemorySaver()
     mock_mongo_saver.from_conn_string.return_value.__enter__ = MagicMock(return_value=in_memory_checkpointer)
     mock_mongo_saver.from_conn_string.return_value.__exit__ = MagicMock(return_value=False)
 
-    user_ask = "I bet you can't tell me a joke and save the conversation state in the checkpointer at the same time!"
+    loop = asyncio.get_event_loop()
 
-    response = await run_agent(user_ask, 'user1', 'session1')
+    def predict_fn(question):
+        response = loop.run_until_complete(run_agent(question, "user1", "session2"))
+        return response["messages"][-1].text
 
-    pprint(response)
+    # QA pairs for evaluation
+    dataset = [
+        {
+            "inputs": {"question": "Can MLflow manage prompts?"},
+            "expectations": {"expected_response": "Yes!"},
+        },
+        {
+            "inputs": {"question": "Can MLflow create a taco for my lunch?"},
+            "expectations": {"expected_response": "No, unfortunately, MLflow is not a taco maker."},
+        },
+    ]
 
-    message_text = response["messages"][-1].text
-    print(message_text)
-
-    mock_mongo_saver.from_conn_string.assert_called_once()
+    # Run the evaluation
+    results = mlflow.genai.evaluate(
+        data=dataset,
+        predict_fn=predict_fn,
+        scorers=[
+            # Built-in LLM judge
+            Correctness(model="gemini:/gemini-3.1-flash-lite-preview"),
+        ],
+    )

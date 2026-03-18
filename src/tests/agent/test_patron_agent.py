@@ -13,6 +13,7 @@ from src.agents.patron_itself.patron_agent import run_agent
 from src.tests.conftest import TestPatronModule
 
 USE_REAL_API = os.environ.get("PATRON_REAL_API", "").lower() in ("1", "true", "yes")
+USE_REAL_API = 1
 
 
 class FakeChatModel(FakeMessagesListChatModel):
