@@ -4,11 +4,13 @@ from pprint import pprint
 from unittest.mock import patch, MagicMock
 
 import pytest
+from injector import Injector
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
 from src.agents.patron_itself.patron_agent import run_agent
+from src.tests.conftest import TestPatronModule
 
 USE_REAL_API = os.environ.get("PATRON_REAL_API", "").lower() in ("1", "true", "yes")
 
@@ -29,16 +31,25 @@ def _make_fake_model(responses: list[str] | None = None):
 
 
 def _patch_model(responses: list[str] | None = None):
-    """Patch both the global model and init_chat_model. No-op when PATRON_REAL_API=1."""
+    """Patch model, init_chat_model, and app_container. No-op when PATRON_REAL_API=1."""
     if USE_REAL_API:
         return nullcontext()
 
     fake = _make_fake_model(responses)
+    test_container = Injector([TestPatronModule()])
     stack = ExitStack()
+
     # Patch the module-level `model` (used when no model_override)
     stack.enter_context(patch("src.agents.patron_itself.patron_agent.model", fake))
     # Patch init_chat_model (used when model_override is passed, and by SummarizationMiddleware)
     stack.enter_context(patch("src.agents.patron_itself.patron_agent.init_chat_model", return_value=fake))
+    # Patch app_container with in-memory Qdrant + mongomock (no external services needed)
+    stack.enter_context(patch("src.agents.patron_itself.patron_agent.app_container", test_container))
+    # Reset cached tool globals so they re-initialize with the test container
+    stack.enter_context(patch("src.agents.patron_itself.patron_agent._memory_tools", None))
+    stack.enter_context(patch("src.agents.patron_itself.patron_agent._task_tools", None))
+    stack.enter_context(patch("src.agents.patron_itself.patron_agent._user_tools", None))
+
     return stack
 
 
