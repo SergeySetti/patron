@@ -25,6 +25,9 @@ dependencies = [
     "qdrant-client~=1.17.1",
     "mongomock~=4.3",
     "croniter~=6.2",
+    "nest-asyncio~=1.6.0",
+    "mlflow~=3.10.1",
+    "litellm~=1.82.4",
 ]
 
 [tool.setuptools.packages.find]
