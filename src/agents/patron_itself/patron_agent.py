@@ -14,6 +14,7 @@ from agents.patron_itself.middleware import ToolLoggingMiddleware
 from agents.patron_itself.repositories.memories_repository import MemoriesRepository
 from agents.patron_itself.repositories.tasks_repository import TasksRepository
 from agents.patron_itself.repositories.users_repository import UsersRepository
+from agents.patron_itself.tools.admin_tools import ADMIN_USER_ID, create_admin_tools
 from agents.patron_itself.tools.memory_tools import create_memory_tools
 from agents.patron_itself.tools.task_tools import create_task_tools
 from agents.patron_itself.tools.user_tools import create_user_tools
@@ -44,6 +45,7 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 _memory_tools = None
 _task_tools = None
 _user_tools = None
+_admin_tools = None
 
 
 def _get_memory_tools() -> list:
@@ -68,6 +70,14 @@ def _get_user_tools() -> list:
         users_repo = app_container.get(UsersRepository)
         _user_tools = create_user_tools(users_repo)
     return _user_tools
+
+
+def _get_admin_tools() -> list:
+    global _admin_tools
+    if _admin_tools is None:
+        memories_repo = app_container.get(MemoriesRepository)
+        _admin_tools = create_admin_tools(memories_repo)
+    return _admin_tools
 
 
 def _get_user_timezone(user_id: str) -> str:
@@ -130,9 +140,13 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
 
     effective_model = init_chat_model(model_override) if model_override else model
 
+    tools = [*_get_memory_tools(), *_get_task_tools(), *_get_user_tools()]
+    if user_id == ADMIN_USER_ID:
+        tools.extend(_get_admin_tools())
+
     agent: CompiledStateGraph = create_agent(
         model=effective_model,
-        tools=[*_get_memory_tools(), *_get_task_tools(), *_get_user_tools()],
+        tools=tools,
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
         system_prompt=_build_system_prompt(user_timezone, custom_prompt),
