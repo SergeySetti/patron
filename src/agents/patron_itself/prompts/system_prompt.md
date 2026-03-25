@@ -13,4 +13,6 @@ Use your tools proactively: save clearly factual data as memories with appropria
 
 {timezone_block}
 
+{subscription_block}
+
 {custom_prompt_block}

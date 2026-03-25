@@ -82,6 +82,7 @@ async def test_bot_participation(mock_run_agent, mock_container):
         "What is the weather in New York?",
         "12345",
         "67890",
+        is_subscribed=True,
     )
     context.bot.send_message.assert_called_once_with(
         chat_id=67890,
@@ -98,6 +99,13 @@ async def test_bot_participation_inactive_subscription(mock_run_agent, mock_cont
     mock_users_repo.get_subscription_status.return_value = None
     mock_container.get.return_value = mock_users_repo
 
+    agent_response_text = "Sure, here's your answer. (Also, /subscribe please!)"
+    mock_message = MagicMock()
+    mock_message.text = agent_response_text
+    mock_run_agent.return_value = {
+        'messages': [mock_message]
+    }
+
     update = MagicMock()
     update.message.text = "Hello"
     update.message.chat_id = 67890
@@ -108,6 +116,9 @@ async def test_bot_participation_inactive_subscription(mock_run_agent, mock_cont
 
     await bot_participation(update, context)
 
-    mock_run_agent.assert_not_called()
-    call_kwargs = context.bot.send_message.call_args[1]
-    assert "/subscribe" in call_kwargs["text"]
+    mock_run_agent.assert_called_once_with(
+        "Hello",
+        "12345",
+        "67890",
+        is_subscribed=False,
+    )
