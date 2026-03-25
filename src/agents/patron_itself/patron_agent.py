@@ -88,18 +88,20 @@ def _get_user_timezone(user_id: str) -> str:
 
 async def run_agent(message: str, user_id: str = None, thread_id: str = None,
                     audio: bytes = None, image: bytes = None, image_mime: str = None,
-                    model_override: str = None):
+                    model_override: str = None, is_subscribed: bool = True):
     use_checkpointer = user_id is not None and thread_id is not None
 
     if use_checkpointer:
         with MongoDBSaver.from_conn_string(MONGODB_URI, 'patron_sessions') as checkpointer:
             return await _invoke_agent(message, user_id, thread_id, checkpointer,
                                        audio=audio, image=image, image_mime=image_mime,
-                                       model_override=model_override)
+                                       model_override=model_override,
+                                       is_subscribed=is_subscribed)
     else:
         return await _invoke_agent(message, user_id, thread_id,
                                    audio=audio, image=image, image_mime=image_mime,
-                                   model_override=model_override)
+                                   model_override=model_override,
+                                   is_subscribed=is_subscribed)
 
 
 def _get_user_custom_prompt(user_id: str) -> str:
@@ -115,7 +117,8 @@ def _load_prompt(name: str) -> str:
     return (_PROMPTS_DIR / name).read_text(encoding="utf-8")
 
 
-def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
+def _build_system_prompt(user_timezone: str, custom_prompt: str = "",
+                         is_subscribed: bool = True) -> str:
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     if user_timezone:
@@ -125,16 +128,19 @@ def _build_system_prompt(user_timezone: str, custom_prompt: str = "") -> str:
 
     custom_prompt_block = f"User instructions:\n{custom_prompt}" if custom_prompt else ""
 
+    subscription_block = "" if is_subscribed else _load_prompt("subscription_reminder.md")
+
     return _load_prompt("system_prompt.md").format(
         current_time=now_utc,
         timezone_block=timezone_block,
         custom_prompt_block=custom_prompt_block,
+        subscription_block=subscription_block,
     ).rstrip()
 
 
 async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer=None,
                         audio: bytes = None, image: bytes = None, image_mime: str = None,
-                        model_override: str = None):
+                        model_override: str = None, is_subscribed: bool = True):
     user_timezone = _get_user_timezone(user_id) if user_id else ""
     custom_prompt = _get_user_custom_prompt(user_id) if user_id else ""
 
@@ -149,7 +155,7 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         tools=tools,
         state_schema=CustomAgentState,  # noqa
         checkpointer=checkpointer,
-        system_prompt=_build_system_prompt(user_timezone, custom_prompt),
+        system_prompt=_build_system_prompt(user_timezone, custom_prompt, is_subscribed),
         middleware=[
             ToolLoggingMiddleware(),
             # ModelFallbackMiddleware(GEMINI),

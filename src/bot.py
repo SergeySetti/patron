@@ -283,34 +283,14 @@ async def custom_prompt_cancel(update: Update, context: ContextTypes.DEFAULT_TYP
     return ConversationHandler.END
 
 
-async def _check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Check subscription status. Returns True if active, sends reminder otherwise."""
-    user_id = str(update.effective_user.id)
+def _is_subscribed(user_id: str) -> bool:
+    """Check whether the user has an active subscription."""
     users_repo = app_container.get(UsersRepository)
-
-    # Temporary start ------------------------------------------------
-    users_repo.set_username(user_id, update.effective_user.username)
-    # Temporary end --------------------------------------------------
-
-    status = users_repo.get_subscription_status(user_id)
-    if status != "active":
-        await context.bot.send_message(
-            chat_id=update.message.chat_id,
-            reply_to_message_id=update.message.message_id,
-            text=(
-                "Your subscription is not active. "
-                "Please use /subscribe to continue using Patron."
-            ),
-        )
-        return False
-    return True
+    return users_repo.get_subscription_status(user_id) == "active"
 
 
 async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message is None:
-        return
-
-    if not await _check_subscription(update, context):
         return
 
     user_message = update.message.text
@@ -320,7 +300,8 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     username = update.effective_user.username
     logger.info(f"User message from @{username}: {user_message}")
 
-    response = await run_agent(user_message, user_id, chat_id)
+    response = await run_agent(user_message, user_id, chat_id,
+                               is_subscribed=_is_subscribed(user_id))
     agent_reply = response['messages'][-1].text
 
     logger.info(f"Agent reply: {agent_reply}")
@@ -333,7 +314,7 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 
 async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _check_subscription(update, context):
+    if update.message is None:
         return
 
     user_id = str(update.effective_user.id)
@@ -346,7 +327,8 @@ async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
     caption = update.message.caption or ""
     logger.info(f"Voice message from user {user_id} ({voice.duration}s, {voice.file_size} bytes)")
 
-    response = await run_agent(caption, user_id, chat_id, audio=bytes(audio_bytes))
+    response = await run_agent(caption, user_id, chat_id, audio=bytes(audio_bytes),
+                               is_subscribed=_is_subscribed(user_id))
     agent_reply = response['messages'][-1].text
 
     logger.info(f"Agent reply: {agent_reply}")
@@ -359,7 +341,7 @@ async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def photo_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _check_subscription(update, context):
+    if update.message is None:
         return
 
     user_id = str(update.effective_user.id)
@@ -380,7 +362,8 @@ async def photo_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
     caption = update.message.caption or ""
     logger.info(f"Photo from user {user_id} ({photo.width}x{photo.height}, {photo.file_size} bytes)")
 
-    response = await run_agent(caption, user_id, chat_id, image=bytes(image_bytes), image_mime=mime)
+    response = await run_agent(caption, user_id, chat_id, image=bytes(image_bytes), image_mime=mime,
+                               is_subscribed=_is_subscribed(user_id))
     agent_reply = response['messages'][-1].text
 
     logger.info(f"Agent reply: {agent_reply}")
