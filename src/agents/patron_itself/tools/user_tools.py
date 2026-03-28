@@ -1,3 +1,4 @@
+from langchain_community.tools import BraveSearch
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
 from typing_extensions import Annotated
@@ -5,12 +6,16 @@ from typing_extensions import Annotated
 from agents.patron_itself.repositories.users_repository import UsersRepository
 
 
+def create_brave_search_tools() -> list:
+    return [BraveSearch.from_search_kwargs({"max_results": 9})]
+
+
 def create_user_tools(repo: UsersRepository) -> list:
     """Create user-data tools bound to a UsersRepository instance."""
 
     @tool
     def get_user_timezone(
-        user_id: Annotated[str, InjectedState("user_id")],
+            user_id: Annotated[str, InjectedState("user_id")],
     ) -> str:
         """Get the user's stored timezone.
 
@@ -25,8 +30,8 @@ def create_user_tools(repo: UsersRepository) -> list:
 
     @tool
     def set_user_timezone(
-        timezone: str,
-        user_id: Annotated[str, InjectedState("user_id")],
+            timezone: str,
+            user_id: Annotated[str, InjectedState("user_id")],
     ) -> str:
         """Save or update the user's timezone.
 

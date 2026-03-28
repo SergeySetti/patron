@@ -26,8 +26,8 @@ SUBSCRIPTION_DESCRIPTION = "Monthly subscription to Patron AI assistant"
 SUBSCRIPTION_PRICE = 250  # Telegram Stars
 SUBSCRIPTION_PAYLOAD = f"patron_monthly_{SUBSCRIPTION_PRICE}"
 
-# 31 days in seconds, used for subscription expiration logic
-SUBSCRIPTION_PERIOD = 31 * 24 * 60 * 60
+# 14 days in seconds, used for subscription expiration logic
+SUBSCRIPTION_PERIOD = 14 * 24 * 60 * 60
 
 logger = app_container.get(AssistantLogger)
 

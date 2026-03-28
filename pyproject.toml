@@ -9,11 +9,11 @@ description = "Telegram Agentic AI bot"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "langchain~=1.2.12",
+    "langchain~=1.2.13",
     "langchain-google-genai",
     "langchain-anthropic",
+    "langchain-community",
     "psycopg[binary]~=3.3.3",
-    "pymongo~=4.15.5",
     "langgraph-checkpoint-mongodb~=0.3.1",
     "python-telegram-bot[job-queue]~=22.7",
     "python-dotenv~=1.2",

@@ -17,7 +17,7 @@ from agents.patron_itself.repositories.users_repository import UsersRepository
 from agents.patron_itself.tools.admin_tools import ADMIN_USER_ID, create_admin_tools
 from agents.patron_itself.tools.memory_tools import create_memory_tools
 from agents.patron_itself.tools.task_tools import create_task_tools
-from agents.patron_itself.tools.user_tools import create_user_tools
+from agents.patron_itself.tools.user_tools import create_user_tools, create_brave_search_tools
 from dependencies import app_container
 
 load_dotenv()
@@ -146,7 +146,12 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
 
     effective_model = init_chat_model(model_override) if model_override else model
 
-    tools = [*_get_memory_tools(), *_get_task_tools(), *_get_user_tools()]
+    tools = [
+        *_get_memory_tools(),
+        *_get_task_tools(),
+        *_get_user_tools(),
+        *create_brave_search_tools(),
+    ]
     if user_id == ADMIN_USER_ID:
         tools.extend(_get_admin_tools())
 
