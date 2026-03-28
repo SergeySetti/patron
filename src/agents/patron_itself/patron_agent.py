@@ -18,6 +18,7 @@ from agents.patron_itself.tools.admin_tools import ADMIN_USER_ID, create_admin_t
 from agents.patron_itself.tools.memory_tools import create_memory_tools
 from agents.patron_itself.tools.task_tools import create_task_tools
 from agents.patron_itself.tools.user_tools import create_user_tools, create_brave_search_tools
+from agents.patron_itself.tools.web_tools import create_web_tools
 from dependencies import app_container
 
 load_dotenv()
@@ -151,6 +152,7 @@ async def _invoke_agent(message: str, user_id: str, thread_id: str, checkpointer
         *_get_task_tools(),
         *_get_user_tools(),
         *create_brave_search_tools(),
+        *create_web_tools(),
     ]
     if user_id == ADMIN_USER_ID:
         tools.extend(_get_admin_tools())
