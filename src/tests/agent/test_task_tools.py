@@ -30,6 +30,7 @@ class TestCreateTask:
                 "due_at": "2025-06-01T12:00:00+00:00",
                 "user_id": USER_ID,
                 "chat_id": CHAT_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
@@ -43,10 +44,11 @@ class TestCreateTask:
                 "due_at": "2025-06-01T12:00:00+00:00",
                 "user_id": USER_ID,
                 "chat_id": CHAT_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
 
         assert len(tasks) == 1
         assert tasks[0]["text"] == "Buy milk"
@@ -60,6 +62,7 @@ class TestCreateTask:
                 "recurrence": "0 9 * * *",
                 "user_id": USER_ID,
                 "chat_id": CHAT_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
@@ -74,10 +77,11 @@ class TestCreateTask:
                 "recurrence": "0 10 * * 1",
                 "user_id": USER_ID,
                 "chat_id": CHAT_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
 
         assert len(tasks) == 1
         assert tasks[0]["recurrence"] == "0 10 * * 1"
@@ -89,10 +93,11 @@ class TestCreateTask:
                 "due_at": "2025-06-01T12:00:00+00:00",
                 "user_id": USER_ID,
                 "chat_id": CHAT_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
 
         assert "recurrence" not in tasks[0]
 
@@ -104,10 +109,11 @@ class TestCreateTask:
                 "special_instructions_for_agent": "Include exercises from stored plan",
                 "user_id": USER_ID,
                 "chat_id": CHAT_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
 
         assert len(tasks) == 1
         assert tasks[0]["special_instructions_for_agent"] == (
@@ -122,11 +128,11 @@ class TestUpdateTask:
         task_id = repo.create(USER_ID, CHAT_ID, "Old text", due)
 
         result = tools["update_task"].invoke(
-            {"task_id": task_id, "text": "New text", "user_id": USER_ID}
+            {"task_id": task_id, "text": "New text", "user_id": USER_ID, "user_timezone": "Europe/Kyiv"}
         )
 
         assert "updated" in result
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert tasks[0]["text"] == "New text"
 
     def test_update_due_at(self, tools, repo):
@@ -138,6 +144,7 @@ class TestUpdateTask:
                 "task_id": task_id,
                 "due_at": "2025-07-01T12:00:00+00:00",
                 "user_id": USER_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
@@ -152,10 +159,11 @@ class TestUpdateTask:
                 "task_id": task_id,
                 "recurrence": "0 9 * * *",
                 "user_id": USER_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert tasks[0]["recurrence"] == "0 9 * * *"
 
     def test_update_remove_recurrence(self, tools, repo):
@@ -169,10 +177,11 @@ class TestUpdateTask:
                 "task_id": task_id,
                 "remove_recurrence": True,
                 "user_id": USER_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert "recurrence" not in tasks[0]
 
     def test_update_special_instructions(self, tools, repo):
@@ -184,10 +193,11 @@ class TestUpdateTask:
                 "task_id": task_id,
                 "special_instructions_for_agent": "Be motivational",
                 "user_id": USER_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert tasks[0]["special_instructions_for_agent"] == "Be motivational"
 
     def test_update_remove_special_instructions(self, tools, repo):
@@ -202,15 +212,16 @@ class TestUpdateTask:
                 "task_id": task_id,
                 "remove_special_instructions": True,
                 "user_id": USER_ID,
+                "user_timezone": "Europe/Kyiv",
             }
         )
 
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert "special_instructions_for_agent" not in tasks[0]
 
     def test_update_nonexistent(self, tools):
         result = tools["update_task"].invoke(
-            {"task_id": "nope", "text": "New", "user_id": USER_ID}
+            {"task_id": "nope", "text": "New", "user_id": USER_ID, "user_timezone": "Europe/Kyiv"}
         )
         assert "not found" in result
 
@@ -219,7 +230,7 @@ class TestUpdateTask:
         task_id = repo.create(USER_ID, CHAT_ID, "Task", due)
 
         result = tools["update_task"].invoke(
-            {"task_id": task_id, "user_id": USER_ID}
+            {"task_id": task_id, "user_id": USER_ID, "user_timezone": "Europe/Kyiv"}
         )
 
         assert "Nothing to update" in result
@@ -233,8 +244,8 @@ class TestListTasks:
         task_id = repo.create(USER_ID, CHAT_ID, "Done one", due)
         repo.mark_completed(task_id)
 
-        pending = tools["list_tasks"].invoke({"user_id": USER_ID, "status": "pending"})
-        completed = tools["list_tasks"].invoke({"user_id": USER_ID, "status": "completed"})
+        pending = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv", "status": "pending"})
+        completed = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv", "status": "completed"})
 
         assert len(pending) == 1
         assert pending[0]["text"] == "Pending one"
@@ -242,7 +253,7 @@ class TestListTasks:
         assert completed[0]["text"] == "Done one"
 
     def test_empty_list(self, tools):
-        tasks = tools["list_tasks"].invoke({"user_id": USER_ID})
+        tasks = tools["list_tasks"].invoke({"user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert tasks == []
 
 
@@ -252,13 +263,13 @@ class TestDeleteTask:
         due = datetime(2025, 6, 1, tzinfo=timezone.utc)
         task_id = repo.create(USER_ID, CHAT_ID, "To delete", due)
 
-        result = tools["delete_task"].invoke({"task_id": task_id, "user_id": USER_ID})
+        result = tools["delete_task"].invoke({"task_id": task_id, "user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
 
         assert "deleted" in result
         assert repo.get_tasks_for_user(USER_ID) == []
 
     def test_delete_nonexistent(self, tools):
-        result = tools["delete_task"].invoke({"task_id": "nope", "user_id": USER_ID})
+        result = tools["delete_task"].invoke({"task_id": "nope", "user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
         assert "not found" in result
 
     def test_delete_stops_recurring(self, tools, repo):
@@ -267,7 +278,7 @@ class TestDeleteTask:
             USER_ID, CHAT_ID, "Recurring", due, recurrence="0 9 * * *",
         )
 
-        result = tools["delete_task"].invoke({"task_id": task_id, "user_id": USER_ID})
+        result = tools["delete_task"].invoke({"task_id": task_id, "user_id": USER_ID, "user_timezone": "Europe/Kyiv"})
 
         assert "deleted" in result
         assert repo.get_tasks_for_user(USER_ID) == []

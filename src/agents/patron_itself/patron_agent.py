@@ -120,7 +120,12 @@ def _load_prompt(name: str) -> str:
 
 def _build_system_prompt(user_timezone: str, custom_prompt: str = "",
                          is_subscribed: bool = True) -> str:
-    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now_utc = datetime.now(timezone.utc)
+    now_str = now_utc.strftime("%Y-%m-%d %H:%M UTC")
+    if user_timezone:
+        from zoneinfo import ZoneInfo
+        local_time = now_utc.astimezone(ZoneInfo(user_timezone))
+        now_str += f" ({local_time.strftime('%H:%M')} {user_timezone})"
 
     if user_timezone:
         timezone_block = _load_prompt("timezone_known.md").format(user_timezone=user_timezone)
@@ -132,7 +137,7 @@ def _build_system_prompt(user_timezone: str, custom_prompt: str = "",
     subscription_block = "" if is_subscribed else _load_prompt("subscription_reminder.md")
 
     return _load_prompt("system_prompt.md").format(
-        current_time=now_utc,
+        current_time=now_str,
         timezone_block=timezone_block,
         custom_prompt_block=custom_prompt_block,
         subscription_block=subscription_block,

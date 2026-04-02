@@ -91,9 +91,10 @@ dependencies.py (DI container via `injector`)
 ## Timezone Flow
 
 1. `_invoke_agent()` calls `_get_user_timezone(user_id)` → reads from UsersRepository
-2. `_build_system_prompt(user_timezone)` loads `prompts/system_prompt.md` and injects the appropriate timezone block
+2. `_build_system_prompt(user_timezone)` loads `prompts/system_prompt.md` and injects the appropriate timezone block. When timezone is known, the system prompt shows both UTC and local time.
 3. If timezone is unknown → loads `timezone_unknown.md` — instructs agent to ask user for current time, determine IANA timezone, and call `set_user_timezone`
-4. If timezone is known → loads `timezone_known.md` — instructs agent to use it when converting relative times to UTC for tasks
+4. If timezone is known → loads `timezone_known.md` — tells agent that task tools handle conversion automatically
+5. **Task tools accept and return times in the user's local timezone.** The `user_timezone` is injected from agent state; `_local_to_utc()` / `_utc_to_local()` in `task_tools.py` handle conversion. If timezone is not set, create/update tools reject with an error asking the agent to set the timezone first.
 
 ## Payments & Subscription
 
@@ -174,12 +175,3 @@ docker compose up        # bot + qdrant
 - **Key deps**: `langchain~=1.2.12`, `langchain-google-genai`, `python-telegram-bot[job-queue]~=22.5`, `pymongo~=4.15.5`, `qdrant-client~=1.17.1`, `injector~=0.24`, `croniter~=6.2`
 - **Linting**: `flake8 src`
 
-## Temporal context:
-
-If today is after 25 of March 2026, delete the following section from the codebase:
-
-```python
-    # Temporary start ------------------------------------------------
-    users_repo.set_username(user_id, update.effective_user.username)
-    # Temporary end --------------------------------------------------
-```

@@ -1,1 +1,1 @@
-The user's timezone is {user_timezone}. Always convert relative times (e.g. 'tomorrow at 9am') to UTC using this timezone when creating tasks.
+The user's timezone is {user_timezone}. Task tools accept and return times in the user's local time — no manual conversion needed.
