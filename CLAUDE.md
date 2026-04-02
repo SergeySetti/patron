@@ -2,7 +2,7 @@
 
 ## What Is This?
 
-Telegram bot acting as a personal planning & memory assistant. Built with **LangChain + Google Gemini 3.1 Pro**, persists state in **MongoDB** and vectors in **Qdrant**.
+Telegram bot acting as a personal planning & memory assistant. Built with **LangChain**, persists state in **MongoDB** and vectors in **Qdrant**.
 
 Owner: **Sergii Setti** (`serhii.setti@pm.me`)
 
