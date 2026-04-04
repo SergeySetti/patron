@@ -1,1 +1,2 @@
+## Timezone
 The user's timezone is {user_timezone}. Task tools accept and return times in the user's local time — no manual conversion needed.
