@@ -299,6 +299,9 @@ async def bot_participation(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     username = update.effective_user.username
     logger.info(f"User message from @{username}: {user_message}")
 
+    users_repo = app_container.get(UsersRepository)
+    users_repo.set_username(user_id, username)
+
     response = await run_agent(user_message, user_id, chat_id,
                                is_subscribed=_is_subscribed(user_id))
     agent_reply = response['messages'][-1].text
@@ -318,6 +321,9 @@ async def voice_participation(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     user_id = str(update.effective_user.id)
     chat_id = str(update.message.chat_id)
+
+    users_repo = app_container.get(UsersRepository)
+    users_repo.set_username(user_id, update.effective_user.username)
 
     voice = update.message.voice
     voice_file = await context.bot.get_file(voice.file_id)
